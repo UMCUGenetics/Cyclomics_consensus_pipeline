@@ -15,7 +15,7 @@ if __name__ == "__main__":
         group.add_option("-c", default=10, dest="coverage", metavar="[INT]", help="minimum coverage required for assembly [default = 10]")
         group.add_option("-m", default="m.elferink@umcutrecht.nl", dest="mail", metavar="[STRING]", help="email used for job submitting [default = m.elferink@umcutrecht.nl]")
         group.add_option("-t", default="4:00:00", dest="timeslot", metavar="[TIME]", help="time slot for jobs [default = 4:00:00]")
-        group.add_option("-n", default="4000", dest="number", metavar="[INT]", help="number of jobs within a scatterjob [default = 1000]")
+        group.add_option("-n", default="1000", dest="number", metavar="[INT]", help="number of jobs within a scatterjob [default = 1000]")
         group.add_option("--mem", default=32, dest="max_mem", metavar="[INT]", help="memory used for jobs [default = 32]")
         group.add_option("--threads", default=1, dest="threads", metavar="[INT]", help="number threads used for jobs [default = 1]")
         group.add_option("--cl", default=35, dest="cons_len", metavar="INT", help="minimum length (bp) for consensus calling [default 35]")      
