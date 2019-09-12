@@ -112,7 +112,7 @@ for f in files:
             x+=1
         y+=1
     runner+=1
-
+total =0
 for item in line_dic:
     if gz=="off":
         folder=item.split("/")[-1][0:-6]
@@ -128,6 +128,7 @@ for item in line_dic:
     write_file.write("mkdir -p "+ outdir+"/consensus/"+ folder+"_"+str(x) +"/\n")
     write_file.write("sleep 10\n") 
     for f in line_dic[item]:
+        total+=1
         position=f.values()[0]
         fastq=f.keys()[0]
 
@@ -160,12 +161,15 @@ for item in line_dic:
             list+=[outdir+"/x"+folder+"_job_"+str(x)+".sh"]
             write_file.close()
             x+=1
-            write_file=open(outdir+"/x"+folder+"_job_"+str(x)+".sh","w")
-            write_file.write(". "+opt.env+"\n")
-            write_file.write("echo \"Start poststats    \" `date` \"    \" `uname -n`\n")
-            write_file.write("mkdir "+ outdir+"/bam/"+ folder+"_"+str(x) +"/\n")
-            write_file.write("mkdir "+ outdir+"/m5/"+ folder+"_"+str(x) +"/\n")
-            write_file.write("mkdir "+ outdir+"/consensus/"+ folder+"_"+str(x) +"/\n")
+            if total == len(line_dic[item]):
+                pass
+            else:
+                write_file=open(outdir+"/x"+folder+"_job_"+str(x)+".sh","w")
+                write_file.write(". "+opt.env+"\n")
+                write_file.write("echo \"Start poststats    \" `date` \"    \" `uname -n`\n")
+                write_file.write("mkdir "+ outdir+"/bam/"+ folder+"_"+str(x) +"/\n")
+                write_file.write("mkdir "+ outdir+"/m5/"+ folder+"_"+str(x) +"/\n")
+                write_file.write("mkdir "+ outdir+"/consensus/"+ folder+"_"+str(x) +"/\n")
 
             c=0
         else:
