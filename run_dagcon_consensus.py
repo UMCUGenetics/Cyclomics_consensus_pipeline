@@ -123,10 +123,10 @@ for item in line_dic:
     write_file=open(outdir+"/x"+folder+"_job_"+str(x)+".sh","w")
     write_file.write(". "+opt.env+"\n")
     write_file.write("echo \"Start poststats    \" `date` \"    \" `uname -n`\n\n")
-    write_file.write("mkdir -p "+ outdir+"/bam/"+ folder+"_"+str(x) +"/\n")
-    write_file.write("mkdir -p "+ outdir+"/m5/"+ folder+"_"+str(x) +"/\n")
-    write_file.write("mkdir -p "+ outdir+"/consensus/"+ folder+"_"+str(x) +"/\n")
-    write_file.write("sleep 10\n") 
+    os.system("mkdir -p "+ outdir+"/bam/"+ folder+"_"+str(x))
+    os.system("mkdir -p "+ outdir+"/m5/"+ folder+"_"+str(x))
+    os.system("mkdir -p "+ outdir+"/consensus/"+ folder+"_"+str(x))
+
     for f in line_dic[item]:
         total+=1
         position=f.values()[0]
@@ -167,9 +167,9 @@ for item in line_dic:
                 write_file=open(outdir+"/x"+folder+"_job_"+str(x)+".sh","w")
                 write_file.write(". "+opt.env+"\n")
                 write_file.write("echo \"Start poststats    \" `date` \"    \" `uname -n`\n")
-                write_file.write("mkdir "+ outdir+"/bam/"+ folder+"_"+str(x) +"/\n")
-                write_file.write("mkdir "+ outdir+"/m5/"+ folder+"_"+str(x) +"/\n")
-                write_file.write("mkdir "+ outdir+"/consensus/"+ folder+"_"+str(x) +"/\n")
+                os.system("mkdir "+ outdir+"/bam/"+ folder+"_"+str(x))
+                os.system("mkdir "+ outdir+"/m5/"+ folder+"_"+str(x))
+                os.system("mkdir "+ outdir+"/consensus/"+ folder+"_"+str(x))
 
             c=0
         else:
