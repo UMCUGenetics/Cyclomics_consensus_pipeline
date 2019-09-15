@@ -10,8 +10,8 @@ from optparse import OptionGroup
 if __name__ == "__main__":
         parser = OptionParser();
         group = OptionGroup(parser, "Main options")
-        group.add_option("-i", dest="wkdir", metavar="[PATH]", help="full path to input directory [default = ./")
-        group.add_option("-o", dest="outdir", metavar="[PATH]", help="full path to output directory [default = ./")
+        group.add_option("-i", dest="wkdir", metavar="[PATH]", help="full path to FASTQ folder [default = ./")
+        group.add_option("-o", dest="outdir", metavar="[PATH]", help="full path to output folder [default = ./")
         group.add_option("-c", default=10, dest="coverage", metavar="[INT]", help="minimum coverage required for assembly [default = 10]")
         group.add_option("-m", default="m.elferink@umcutrecht.nl", dest="mail", metavar="[STRING]", help="email used for job submitting [default = m.elferink@umcutrecht.nl]")
         group.add_option("-t", default="4:00:00", dest="timeslot", metavar="[TIME]", help="time slot for jobs [default = 4:00:00]")
