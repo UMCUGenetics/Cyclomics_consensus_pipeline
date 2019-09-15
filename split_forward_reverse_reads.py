@@ -7,8 +7,8 @@ from optparse import OptionGroup
 if __name__ == "__main__":
         parser = OptionParser();
         group = OptionGroup(parser, "Main options")
-        group.add_option("-i", dest="wkdir", metavar="[PATH]", help="full path to input directory [default = ./")
-        group.add_option("-o", dest="outdir", metavar="[PATH]", help="full path to output directory [default = ./")
+        group.add_option("-i", dest="wkdir", metavar="[PATH]", help="full path to BAM input folder [default = ./")
+        group.add_option("-o", dest="outdir", metavar="[PATH]", help="full path to output folder [default = ./")
         group.add_option("-b", default="/hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa", dest="bwa", metavar="[PATH]", help="full path to bwa binary [default = /hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa ]")
         group.add_option("--sa", default="/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba", dest="sambamba", metavar="[PATH]", help="full path to sambamba binary [default = /hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba]")
         group.add_option("--b5", default="/hpc/cog_bioinf/ridder/tools/bam2m5/bam2m5.py", dest="bam2m5", metavar="[PATH]", help="full path to bam2m5 binary [default = /hpc/cog_bioinf/ridder/tools/bam2m5/bam2m5.py]")
