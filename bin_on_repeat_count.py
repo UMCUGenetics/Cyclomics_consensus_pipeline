@@ -6,8 +6,8 @@ from optparse import OptionGroup
 if __name__ == "__main__":
         parser = OptionParser();
         group = OptionGroup(parser, "Main options")
-        group.add_option("-i", dest="wkdir", metavar="[PATH]", help="full path to input directory of m5 folder [default = ./]")
-        group.add_option("-o", dest="outdir", metavar="[PATH]", help="full path to output directory [default = ./")
+        group.add_option("-i", dest="wkdir", metavar="[PATH]", help="full path to  m5 folder [default = ./]")
+        group.add_option("-o", dest="outdir", metavar="[PATH]", help="full path to output folder [default = ./")
         group.add_option("-p", default="/hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon", dest="pbdagcon", metavar="[PATH]", help="full path to pbgadcon binary [default = /hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon]")
         group.add_option("--param", default=" -c 2 -t 0 -j 2 ", dest="param", metavar="[STRING]", help="pbdagcon paramteres [default =  -c 2 -t 0 -j 2 ]")
         group.add_option("--sa", default="/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba", dest="sambamba", metavar="[PATH]", help="full path to sambamba binary [default = /hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba]")
