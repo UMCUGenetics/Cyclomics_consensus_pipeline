@@ -69,7 +69,8 @@ for folder in os.listdir(infolder):
                 if insert_count == x:
                     os.system("tar -axf "+str(tarfile)+ " "+ str(f)+ " -O | " + str(pbdagcon)+" - "+ param + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"//bin_consensus/consensus_"+str(x)+".fasta")
 
-def write_new_file(x):
+job_id=[]
+def write_new_file(x,job_id):
     runid="consensus_"+str(x)
     write_file=open(str(outfolder)+"/SH/"+str(runid)+".sh","w")
     write_file.write(bwa + " mem -t "+str(opt.threads)+" -c 100 -M -R \"@RG\\tID:"+runid+"\\tSM:"+runid+"\\tPL:NANOPORE\\tLB:"+runid+"\" "+refgenome_full+" "+str(outfolder)+"//bin_consensus/"+runid+".fasta > "+str(outfolder)+"/"+runid+"_full_consensus.sam\n")
@@ -83,13 +84,17 @@ def write_new_file(x):
     write_file.write("mv "+str(outfolder)+"/"+runid+"_full_consensus.sorted.bam* "+str(outfolder)+"/bin_consensus/\n")
     write_file.write("sleep 2\n")
     write_file.close()
-    os.system("qsub -q all.q -P "+str(project)+" -l h_rt="+str(opt.timeslot)+" -l h_vmem="+str(opt.max_mem)+"G -cwd -pe threaded "+str(opt.threads)+" "+str(outfolder)+"/SH/"+str(runid+".sh") + " -o "+str(outfolder)+"/SH/"+str(runid+".output")+ " -e ./SH/" + str(runid+".error") +" -m a -M "+ str(mail))
-
+    action="qsub -q all.q -P "+str(project)+" -l h_rt="+str(opt.timeslot)+" -l h_vmem="+str(opt.max_mem)+"G -cwd -pe threaded "+str(opt.threads)+" "+str(outfolder)+"/SH/"+str(runid+".sh") + " -o "+str(outfolder)+"/SH/"+str(runid+".output")+ " -e ./SH/" + str(runid+".error") +" -m a -M "+ str(mail)
+    job_id+= [commands.getoutput(action).split()[2]]
+    return job_id
 
 for x in xrange(1, 40):
-    write_new_file(x)
-write_new_file("40+")
+    job_id=write_new_file(x,job_id)
+job_id=write_new_file("40+",job_id)
 
-
-
-
+# cleanup
+write_file=open(str(outfolder)+"/SH/cleanup.sh","w")
+write_file.write("mv "+str(outfolder)+"/*sh* SH\n")
+write_file.close()
+action=("qsub -cwd -q all.q -P "+str(project)+ " -l h_rt=00:05:00 -l h_vmem=4G "+" -hold_jid "+str(",".join(job_id))+" "+str(outfolder)+"/SH/cleanup.sh" + " -o "  +str(outfolder)+"/SH/"+ " -e " + str(outfolder)+"/SH/" + " -m ae -M "+str(opt.mail))
+os.system(action)
