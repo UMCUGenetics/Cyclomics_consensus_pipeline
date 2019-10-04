@@ -16,6 +16,7 @@ if __name__ == "__main__":
         group.add_option("-m", default="m.elferink@umcutrecht.nl", dest="mail", metavar="[STRING]", help="email used for job submitting [default = m.elferink@umcutrecht.nl]")
         group.add_option("-t", default="4:00:00", dest="timeslot", metavar="[TIME]", help="time slot for jobs [default = 4:00:00]")
         group.add_option("-n", default="1000", dest="number", metavar="[INT]", help="number of jobs within a scatterjob [default = 1000]")
+        group.add_option("-p", dest="prefix", metavar="[STRING]", help="prefix of BAM names [default = off (FASTQ input folder name)]")
         group.add_option("--mem", default=32, dest="max_mem", metavar="[INT]", help="memory used for jobs [default = 32]")
         group.add_option("--threads", default=1, dest="threads", metavar="[INT]", help="number threads used for jobs [default = 1]")
         group.add_option("--cl", default=35, dest="cons_len", metavar="INT", help="minimum length (bp) for consensus calling [default 35]")      
@@ -27,7 +28,7 @@ if __name__ == "__main__":
 
         group.add_option("-e", default="/hpc/cog_bioinf/ridder/tools/bam2m5/env_3.6/bin/activate", dest="env", metavar="[ENV]", help="full path to python enviroment [default = ihpc/cog_bioinf/ridder/tools/bam2m5_new/env_3.6/bin/activate ]")
         group.add_option("--b5", default="/hpc/cog_bioinf/ridder/tools/bam2m5/bam2m5.py", dest="bam2m5", metavar="[PATH]", help="full path to bam2m5 binary [default = /hpc/cog_bioinf/ridder/tools/bam2m5_new/bam2m5.py]")
-        group.add_option("-p", default="/hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon", dest="pbdagcon", metavar="[PATH]", help="full path to pbgadcon binary [default = /hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon ]")
+        group.add_option("--pbdagcon", default="/hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon", dest="pbdagcon", metavar="[PATH]", help="full path to pbgadcon binary [default = /hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon ]")
         group.add_option("--rf", default="/hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version9/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest="refgenome_full", metavar="[PATH]", help="full path to complete reference genome [default = /hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome//version9/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
         group.add_option("--rt", default="/hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version9/BRAF_TP53_BB_pjet.fasta", dest="refgenome_target", metavar="[PATH]", help="full path to targeted reference genome [default = /hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version9/BRAF_TP53_BB_pjet.fasta]")
         parser.add_option_group(group)
@@ -43,10 +44,15 @@ if opt.outdir:
 else:
     sys.exit("provide output folder")
 
+if opt.prefix:
+    runid=str(opt.prefix)
+else:
+    runid=wkdir.split("/")[-2]
+
 if "fasta" not in opt.refgenome_target:
-     sys.exit("please provide fasta file for target reference genome")
+    sys.exit("please provide fasta file for target reference genome")
 if "fasta" not in opt.refgenome_full:
-     sys.exit("please provide fasta file for full reference genome")
+    sys.exit("please provide fasta file for full reference genome")
 
 wkdir=opt.wkdir
 coverage= opt.coverage
@@ -63,7 +69,7 @@ lastsplit=str(opt.lastal)+"src/last-split"
 mafconvert=str(opt.lastal)+"scripts/maf-convert"
 
 ## print log of used parameters ## 
-runid=wkdir.split("/")[-2]
+#runid=wkdir.split("/")[-2]
 write_file=open(outdir+"/"+str(runid)+".log","w")
 (options, args) = parser.parse_args()
 for item in vars(options):
@@ -184,7 +190,7 @@ for job in list:
     action= "qsub -q all.q -P "+ str(project)+ " -l h_rt=" +str(timeslot)+ " -l h_vmem="+str(max_mem)+"G -R y -cwd -pe threaded "+str(threads)+" "+str(job) + " -o "  +str(outdir+"/SH/")+ " -e " + str(outdir+"/SH/" + " -m a -M "+str(opt.mail))
     job_id+= [commands.getoutput(action).split()[2]]
 
-runid=wkdir.split("/")[-1]
+#runid=wkdir.split("/")[-1]
 write_file=open(outdir+"/full_target_mapping.sh","w")
 write_file.write("mkdir "+ str(outdir)+"/tmp\n")
 
