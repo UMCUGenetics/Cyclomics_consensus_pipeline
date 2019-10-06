@@ -30,8 +30,8 @@ if str(sys.argv[0]) == "python":
 else:
     repo="/".join(sys.argv[0].split("/")[0:-1])
 
-os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outfolder)+"GIT_split_forward_reverse_reads.log")
-os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outfolder)+"GIT_split_forward_reverse_reads.log")
+os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outfolder)+"/GIT_split_forward_reverse_reads.log")
+os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outfolder)+"/GIT_split_forward_reverse_reads.log")
 
 l=["forward","reverse"]
 trim=0
@@ -46,31 +46,31 @@ os.system("rm "+str(outfolder)+"/"+str(outfolder.split("/")[-1])+"_forward.fasta
 
 for folder in os.listdir(infolder):
     tarfile = str(infolder)+"/"+str(folder)+"/"+str(folder).split("/")[-1]+".tar"
-    if  os.path.isfile(tarfile):
+    if  os.path.isfile(tarfile): # skip empty folders
         files=commands.getoutput("tar -tf "+str(tarfile)).split()
-    for f in files:
-        if "bai" not in f:
-            if os.path.isfile(tarfile)== False:
-                break
-            os.system("tar -axf "+str(tarfile)+ " "+ str(f))
-            in_file=pysam.AlignmentFile(str(outfolder)+"/"+str(f), "rb")
-            forward=0
-            reverse=0
-            for line in in_file:
-                if "TP53" in line.reference_name:
-                    if line.flag == 16:
-                        reverse+=1
-                    else:
-                        forward+=1
-            os.system("rm "+ str(outfolder)+"/"+str(f))
-            conf= f[0:-11]+str(".consensus")
-            tarfilec = str(infolder.replace("bam", "consensus"))+"/"+str(folder)+"/"+str(folder).split("/")[-1]+".tar"
-            if reverse>forward:
-                os.system("tar -axf "+str(tarfilec)+ " "+ str(conf) + " -O >> "+ str(outfolder.split("/")[-1])+"_reverse.fasta")
-            elif forward>reverse:
-                os.system("tar -axf "+str(tarfilec)+ " "+ str(conf) + " -O >> "+ str(outfolder.split("/")[-1])+"_forward.fasta")
-            else:
-                pass # discard all reads that are 50/50 f/r      
+        for f in files:
+            if "bai" not in f:
+                if os.path.isfile(tarfile)== False:
+                    break
+                os.system("tar -axf "+str(tarfile)+ " "+ str(f))
+                in_file=pysam.AlignmentFile(str(outfolder)+"/"+str(f), "rb")
+                forward=0
+                reverse=0
+                for line in in_file:
+                    if "TP53" in line.reference_name:
+                        if line.flag == 16:
+                            reverse+=1
+                        else:
+                            forward+=1
+                os.system("rm "+ str(outfolder)+"/"+str(f))
+                conf= f[0:-11]+str(".consensus")
+                tarfilec = str(infolder.replace("bam", "consensus"))+"/"+str(folder)+"/"+str(folder).split("/")[-1]+".tar"
+                if reverse>forward:
+                    os.system("tar -axf "+str(tarfilec)+ " "+ str(conf) + " -O >> "+ str(outfolder.split("/")[-1])+"_reverse.fasta")
+                elif forward>reverse:
+                    os.system("tar -axf "+str(tarfilec)+ " "+ str(conf) + " -O >> "+ str(outfolder.split("/")[-1])+"_forward.fasta")
+                else:
+                    pass # discard all reads that are 50/50 f/r      
 
 
 for item in l:
