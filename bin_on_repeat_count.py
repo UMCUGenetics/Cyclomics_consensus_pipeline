@@ -48,6 +48,17 @@ mail=opt.mail
 project=opt.project
 insert=opt.insert
 
+
+# Log GIT version + commit of repository
+if str(sys.argv[0]) == "python":
+    repo="/".join(sys.argv[1].split("/")[0:-1])
+else:
+    repo="/".join(sys.argv[0].split("/")[0:-1])
+
+os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outfolder)+"GIT_bin_on_repeat_count.log")
+os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outfolder)+"GIT_bin_on_repeat_count.log")
+
+
 for folder in os.listdir(infolder):
     tarfile = str(infolder)+"/"+str(folder)+"/"+str(folder).split("/")[-1]+".tar"
     files=commands.getoutput("tar -tf "+str(tarfile)).split()
