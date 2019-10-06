@@ -55,8 +55,8 @@ if str(sys.argv[0]) == "python":
 else:
     repo="/".join(sys.argv[0].split("/")[0:-1])
 
-os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outfolder)+"GIT_bin_on_repeat_count.log")
-os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outfolder)+"GIT_bin_on_repeat_count.log")
+os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outfolder)+"/GIT_bin_on_repeat_count.log")
+os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outfolder)+"/GIT_bin_on_repeat_count.log")
 
 
 for folder in os.listdir(infolder):
