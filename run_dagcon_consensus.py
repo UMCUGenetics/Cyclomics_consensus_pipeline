@@ -74,8 +74,8 @@ if str(sys.argv[0]) == "python":
 else:
     repo="/".join(sys.argv[0].split("/")[0:-1])
 
-os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outdir)+"GIT_run_dagcon_consensus.log")
-os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outdir)+"GIT_run_dagcon_consensus.log")
+os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outdir)+"/GIT_run_dagcon_consensus.log")
+os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outdir)+"/GIT_run_dagcon_consensus.log")
 
 ## print log of used parameters ## 
 #runid=wkdir.split("/")[-2]
