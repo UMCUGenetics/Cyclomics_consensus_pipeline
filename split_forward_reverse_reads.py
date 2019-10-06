@@ -30,8 +30,8 @@ if str(sys.argv[0]) == "python":
 else:
     repo="/".join(sys.argv[0].split("/")[0:-1])
 
-os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outfolder)+"GIT_split_forward_reverse_reads.log")
-os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outfolder)+"GIT_split_forward_reverse_reads.log")
+os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outfolder)+"/GIT_split_forward_reverse_reads.log")
+os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outfolder)+"/GIT_split_forward_reverse_reads.log")
 
 l=["forward","reverse"]
 trim=0
