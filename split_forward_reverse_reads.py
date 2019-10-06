@@ -23,6 +23,16 @@ outfolder= opt.outdir
 if outfolder.endswith('/'): # chop last "/" if present
     outfolder=outfolder[0:-1]
 
+
+# Log GIT version + commit of repository
+if str(sys.argv[0]) == "python":
+    repo="/".join(sys.argv[1].split("/")[0:-1])
+else:
+    repo="/".join(sys.argv[0].split("/")[0:-1])
+
+os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outfolder)+"GIT_split_forward_reverse_reads.log")
+os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outfolder)+"GIT_split_forward_reverse_reads.log")
+
 l=["forward","reverse"]
 trim=0
 bwa=str(opt.bwa) + " mem -t 2 -c 100 -M -R"

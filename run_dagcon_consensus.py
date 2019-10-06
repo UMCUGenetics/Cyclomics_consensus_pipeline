@@ -68,6 +68,15 @@ lastparam=str(opt.lastal)+"last_params"
 lastsplit=str(opt.lastal)+"src/last-split"
 mafconvert=str(opt.lastal)+"scripts/maf-convert"
 
+# Log GIT version + commit of repository
+if str(sys.argv[0]) == "python":
+    repo="/".join(sys.argv[1].split("/")[0:-1])
+else:
+    repo="/".join(sys.argv[0].split("/")[0:-1])
+
+os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outdir)+"GIT_run_dagcon_consensus.log")
+os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outdir)+"GIT_run_dagcon_consensus.log")
+
 ## print log of used parameters ## 
 #runid=wkdir.split("/")[-2]
 write_file=open(outdir+"/"+str(runid)+".log","w")
@@ -89,7 +98,7 @@ list=[]
 y=1
 runner=0
 files= commands.getoutput("find "+wkdir+ " -iname \"*fastq\"").split()
-if len(files)==0:
+if len(files)==0: ## likely that fastq are compressed
     files= commands.getoutput("find "+wkdir+ " -iname \"*fastq.gz\"").split()
     gz="on"    
 else:
@@ -119,11 +128,19 @@ for f in files:
         y+=1
     runner+=1
 total =0
+
 for item in line_dic:
     if gz=="off":
-        folder=item.split("/")[-1][0:-6]
+        if "pass" in item or "fail" in item:  # handles run with or without pass/fail reads
+            folder=item.split("/")[-2] +"_"+item.split("/")[-1][0:-6]
+        else:
+            folder=item.split("/")[-1][0:-6]
     elif gz=="on":
-        folder=item.split("/")[-1][0:-9]
+        if "pass" in item or "fail" in item: # handles run with or without pass/fail reads
+            folder=item.split("/")[-2] +"_"+item.split("/")[-1][0:-9]
+        else:
+            folder=item.split("/")[-1][0:-9]
+ 
     x=1
     c=0
     write_file=open(outdir+"/x"+folder+"_job_"+str(x)+".sh","w")
@@ -205,7 +222,7 @@ hold_id=[commands.getoutput(action).split()[2]]
 write_file=open(outdir+"/cleanup.sh","w")
 write_file.write("mv "+ str(outdir)+"/*sh* "+str(outdir)+"/SH\n")
 write_file.write("cd "+str(outdir)+"/SH\n") 
-write_file.write("zip -m SH.zip *")
+write_file.write("zip -m SH.zip *\n")
 write_file.close()
 
 action=("qsub -cwd -q all.q -P "+str(project)+ " -l h_rt=0:05:00 -l h_vmem=1G "+" -hold_jid "+str(",".join(hold_id))+" "+str(outdir)+"/cleanup.sh" + " -o "  +str(outdir)+"/SH/"+ " -e " + str(outdir)+"/SH/" + " -m baes -M "+str(opt.mail))
