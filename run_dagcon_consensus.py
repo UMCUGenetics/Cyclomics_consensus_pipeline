@@ -162,29 +162,23 @@ for item in line_dic:
            write_file.write("zcat "+str(item)+"| sed -n \'"+str(position[0])+","+ str(position[1])+"\'p | "+ lastal_src+" -Q 1 -p "+lastparam+" "+refgenome_target_db + " -P 1 /dev/stdin |"+ lastsplit+ "|" + mafconvert+ " -f "+ refgenome_target_db +".dict sam -r \"ID:"+ fastq +" PL:nanopore SM:"+ fastq +"\" /dev/stdin | "+ opt.sambamba+ " view -S -f bam /dev/stdin | "+ opt.sambamba + " sort -t 1 /dev/stdin -o "+ outdir+"/bam/"+ folder+"_"+str(x) +"/"+fastq+".sorted.bam\n") 
 
         ## Add Bam to TAR ball
-        write_file.write("sleep 1\n") 
         write_file.write("cd "+outdir+"/bam/"+ folder+"_"+str(x) +"/\n") 
         write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".sorted.bam*\n")
 
         # Extract BAM file from TAR ball and stdout to command to make m5
-        write_file.write("sleep 1\n")
         write_file.write("tar -axf "+outdir+"/bam/"+ folder+"_"+str(x) +"/"+folder+"_"+str(x)+".tar "+ fastq+".sorted.bam -O | python "+opt.bam2m5+ " - "+refgenome_target+ " "+ outdir+"/m5/"+ folder+"_"+str(x) +"/"+ fastq+".sorted.m5\n")
 
         ## Add m5 to TAR ball
-        write_file.write("sleep 1\n")
         write_file.write("cd "+outdir+"/m5/"+ folder+"_"+str(x) +"/\n")
         write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".sorted.m5*\n")
 
         # Extract M5 file from TAR ball and stdout to command
-        write_file.write("sleep 1\n")
         write_file.write("tar -axf "+outdir+"/m5/"+ folder+"_"+str(x) +"/"+folder+"_"+str(x)+".tar "+ fastq+".sorted.m5 -O |" + opt.pbdagcon+ " - "+" -m "+str(cons_len)+" -c "+str(coverage)+" -t "+str(trim)+" -j "+str(threads)+" > " + outdir+"/consensus/"+ folder+"_"+str(x) +"/"+ fastq+".consensus\n")
         write_file.write("sed -i \'s/>/>"+f.keys()[0]+"_/g\' "+ outdir+"/consensus/"+ folder+"_"+str(x) +"/"+fastq+".consensus\n")
 
         ## Add consensus to TAR ball
-        write_file.write("sleep 1\n")
         write_file.write("cd "+outdir+"/consensus/"+ folder+"_"+str(x) +"/\n")
         write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".consensus*\n")
-        write_file.write("sleep 1\n")
 
         if c==number-1:
             list+=[outdir+"/x"+folder+"_job_"+str(x)+".sh"]
