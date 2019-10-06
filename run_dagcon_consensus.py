@@ -68,6 +68,15 @@ lastparam=str(opt.lastal)+"last_params"
 lastsplit=str(opt.lastal)+"src/last-split"
 mafconvert=str(opt.lastal)+"scripts/maf-convert"
 
+# Log GIT version + commit of repository
+if str(sys.argv[0]) == "python":
+    repo="/".join(sys.argv[1].split("/")[0:-1])
+else:
+    repo="/".join(sys.argv[0].split("/")[0:-1])
+
+os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outdir)+"GIT_run_dagcon_consensus.log")
+os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outdir)+"GIT_run_dagcon_consensus.log")
+
 ## print log of used parameters ## 
 #runid=wkdir.split("/")[-2]
 write_file=open(outdir+"/"+str(runid)+".log","w")
@@ -89,7 +98,7 @@ list=[]
 y=1
 runner=0
 files= commands.getoutput("find "+wkdir+ " -iname \"*fastq\"").split()
-if len(files)==0:
+if len(files)==0: ## likely that fastq are compressed
     files= commands.getoutput("find "+wkdir+ " -iname \"*fastq.gz\"").split()
     gz="on"    
 else:
@@ -119,11 +128,19 @@ for f in files:
         y+=1
     runner+=1
 total =0
+
 for item in line_dic:
     if gz=="off":
-        folder=item.split("/")[-1][0:-6]
+        if "pass" in item or "fail" in item:  # handles run with or without pass/fail reads
+            folder=item.split("/")[-2] +"_"+item.split("/")[-1][0:-6]
+        else:
+            folder=item.split("/")[-1][0:-6]
     elif gz=="on":
-        folder=item.split("/")[-1][0:-9]
+        if "pass" in item or "fail" in item: # handles run with or without pass/fail reads
+            folder=item.split("/")[-2] +"_"+item.split("/")[-1][0:-9]
+        else:
+            folder=item.split("/")[-1][0:-9]
+ 
     x=1
     c=0
     write_file=open(outdir+"/x"+folder+"_job_"+str(x)+".sh","w")
@@ -145,23 +162,29 @@ for item in line_dic:
            write_file.write("zcat "+str(item)+"| sed -n \'"+str(position[0])+","+ str(position[1])+"\'p | "+ lastal_src+" -Q 1 -p "+lastparam+" "+refgenome_target_db + " -P 1 /dev/stdin |"+ lastsplit+ "|" + mafconvert+ " -f "+ refgenome_target_db +".dict sam -r \"ID:"+ fastq +" PL:nanopore SM:"+ fastq +"\" /dev/stdin | "+ opt.sambamba+ " view -S -f bam /dev/stdin | "+ opt.sambamba + " sort -t 1 /dev/stdin -o "+ outdir+"/bam/"+ folder+"_"+str(x) +"/"+fastq+".sorted.bam\n") 
 
         ## Add Bam to TAR ball
+        write_file.write("sleep 1\n") 
         write_file.write("cd "+outdir+"/bam/"+ folder+"_"+str(x) +"/\n") 
         write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".sorted.bam*\n")
 
         # Extract BAM file from TAR ball and stdout to command to make m5
+        write_file.write("sleep 1\n")
         write_file.write("tar -axf "+outdir+"/bam/"+ folder+"_"+str(x) +"/"+folder+"_"+str(x)+".tar "+ fastq+".sorted.bam -O | python "+opt.bam2m5+ " - "+refgenome_target+ " "+ outdir+"/m5/"+ folder+"_"+str(x) +"/"+ fastq+".sorted.m5\n")
 
         ## Add m5 to TAR ball
+        write_file.write("sleep 1\n")
         write_file.write("cd "+outdir+"/m5/"+ folder+"_"+str(x) +"/\n")
         write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".sorted.m5*\n")
 
         # Extract M5 file from TAR ball and stdout to command
+        write_file.write("sleep 1\n")
         write_file.write("tar -axf "+outdir+"/m5/"+ folder+"_"+str(x) +"/"+folder+"_"+str(x)+".tar "+ fastq+".sorted.m5 -O |" + opt.pbdagcon+ " - "+" -m "+str(cons_len)+" -c "+str(coverage)+" -t "+str(trim)+" -j "+str(threads)+" > " + outdir+"/consensus/"+ folder+"_"+str(x) +"/"+ fastq+".consensus\n")
         write_file.write("sed -i \'s/>/>"+f.keys()[0]+"_/g\' "+ outdir+"/consensus/"+ folder+"_"+str(x) +"/"+fastq+".consensus\n")
 
         ## Add consensus to TAR ball
+        write_file.write("sleep 1\n")
         write_file.write("cd "+outdir+"/consensus/"+ folder+"_"+str(x) +"/\n")
         write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".consensus*\n")
+        write_file.write("sleep 1\n")
 
         if c==number-1:
             list+=[outdir+"/x"+folder+"_job_"+str(x)+".sh"]
@@ -205,7 +228,7 @@ hold_id=[commands.getoutput(action).split()[2]]
 write_file=open(outdir+"/cleanup.sh","w")
 write_file.write("mv "+ str(outdir)+"/*sh* "+str(outdir)+"/SH\n")
 write_file.write("cd "+str(outdir)+"/SH\n") 
-write_file.write("zip -m SH.zip *")
+write_file.write("zip -m SH.zip *\n")
 write_file.close()
 
 action=("qsub -cwd -q all.q -P "+str(project)+ " -l h_rt=0:05:00 -l h_vmem=1G "+" -hold_jid "+str(",".join(hold_id))+" "+str(outdir)+"/cleanup.sh" + " -o "  +str(outdir)+"/SH/"+ " -e " + str(outdir)+"/SH/" + " -m baes -M "+str(opt.mail))
