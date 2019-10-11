@@ -225,7 +225,7 @@ write_file.write("cd "+str(outdir)+"/SH\n")
 write_file.write("zip -m SH.zip *\n")
 write_file.close()
 
-action=("qsub -cwd -q all.q -P "+str(project)+ " -l h_rt=0:05:00 -l h_vmem=1G "+" -hold_jid "+str(",".join(hold_id))+" "+str(outdir)+"/cleanup.sh" + " -o "  +str(outdir)+"/SH/"+ " -e " + str(outdir)+"/SH/" + " -m baes -M "+str(opt.mail))
+action=("qsub -cwd -q all.q -P "+str(project)+ " -l h_rt=1:0:00 -l h_vmem=1G "+" -hold_jid "+str(",".join(hold_id))+" "+str(outdir)+"/cleanup.sh" + " -o "  +str(outdir)+"/SH/"+ " -e " + str(outdir)+"/SH/" + " -m baes -M "+str(opt.mail))
 commands.getoutput(action)
 
 print "All jobs sumbitted" 
