@@ -12,6 +12,7 @@ if __name__ == "__main__":
         group = OptionGroup(parser, "Main options")
         group.add_option("-i", dest="wkdir", metavar="[PATH]", help="full path to FASTQ folder [default = ./")
         group.add_option("-o", dest="outdir", metavar="[PATH]", help="full path to output folder [default = ./")
+        group.add_option("-b", dest="blacklist", metavar="[PATH]", help="full path to blacklist file [default = off]")
         group.add_option("-c", default=10, dest="coverage", metavar="[INT]", help="minimum coverage required for assembly [default = 10]")
         group.add_option("-m", default="m.elferink@umcutrecht.nl", dest="mail", metavar="[STRING]", help="email used for job submitting [default = m.elferink@umcutrecht.nl]")
         group.add_option("-t", default="4:00:00", dest="timeslot", metavar="[TIME]", help="time slot for jobs [default = 4:00:00]")
@@ -22,20 +23,22 @@ if __name__ == "__main__":
         group.add_option("--cl", default=35, dest="cons_len", metavar="INT", help="minimum length (bp) for consensus calling [default 35]")      
         group.add_option("--project", default="compgen", dest="project", metavar="STRING", help="SGE project for submitting jobs [default compgen]")
 
-        group.add_option("-b", default="/hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa", dest="bwa", metavar="[PATH]", help="full path to bwa binary [default = /hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa ]")
+        group.add_option("--bwa", default="/hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa", dest="bwa", metavar="[PATH]", help="full path to bwa binary [default = /hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa ]")
         group.add_option("--sa", default="/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba", dest="sambamba", metavar="[PATH]", help="full path to sambamba binary [default = /hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba]")
         group.add_option("--la", default="/hpc/cog_bioinf/ridder/tools/last-921/", dest="lastal", metavar="[PATH]", help="full path to lastal binary [default = /hpc/cog_bioinf/ridder/tools/last-921/]")
 
         group.add_option("-e", default="/hpc/cog_bioinf/ridder/tools/bam2m5/env_3.6/bin/activate", dest="env", metavar="[ENV]", help="full path to python enviroment [default = ihpc/cog_bioinf/ridder/tools/bam2m5_new/env_3.6/bin/activate ]")
         group.add_option("--b5", default="/hpc/cog_bioinf/ridder/tools/bam2m5/bam2m5.py", dest="bam2m5", metavar="[PATH]", help="full path to bam2m5 binary [default = /hpc/cog_bioinf/ridder/tools/bam2m5_new/bam2m5.py]")
         group.add_option("--pbdagcon", default="/hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon", dest="pbdagcon", metavar="[PATH]", help="full path to pbgadcon binary [default = /hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon ]")
-        group.add_option("--rf", default="/hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version9/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest="refgenome_full", metavar="[PATH]", help="full path to complete reference genome [default = /hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome//version9/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
-        group.add_option("--rt", default="/hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version9/BRAF_TP53_BB_pjet.fasta", dest="refgenome_target", metavar="[PATH]", help="full path to targeted reference genome [default = /hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version9/BRAF_TP53_BB_pjet.fasta]")
+        group.add_option("--rf", default="/hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest="refgenome_full", metavar="[PATH]", help="full path to complete reference genome [default = /hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
+        group.add_option("--rt", default="/hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version12/BRAF_TP53_EGFR_BB_pjet.fasta", dest="refgenome_target", metavar="[PATH]", help="full path to targeted reference genome [default = /hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version12/BRAF_TP53_EGFR_BB_pjet.fasta]")
         parser.add_option_group(group)
         (opt, args) = parser.parse_args()
 
 if not opt.wkdir:
     sys.exit("provide input folder")
+
+wkdir=opt.wkdir
 
 if opt.outdir:
     outdir= opt.outdir
@@ -54,7 +57,16 @@ if "fasta" not in opt.refgenome_target:
 if "fasta" not in opt.refgenome_full:
     sys.exit("please provide fasta file for full reference genome")
 
-wkdir=opt.wkdir
+dic_bl={}
+if opt.blacklist:
+    blacklist=open(opt.blacklist,"r").readlines()
+    for item in blacklist:
+        if "read" in item:
+            if item.split()[1].split("_")[1] not in dic_bl:
+                dic_bl[item.split()[1].split("_")[1]]="_".join(item.split()[2:])
+            else:
+                print "Warning, read found multiple times in blacklist "+ str(item.split()[1].split("_")[1])
+
 coverage= opt.coverage
 number=int(opt.number)
 project=opt.project
@@ -155,30 +167,44 @@ for item in line_dic:
         position=f.values()[0]
         fastq=f.keys()[0]
 
-        ### Make BAM file
-        if gz=="off":
-            write_file.write("cat "+str(item)+"| sed -n \'"+str(position[0])+","+ str(position[1])+"\'p | "+ lastal_src+" -Q 1 -p "+lastparam+" "+refgenome_target_db + " -P 1 /dev/stdin |"+ lastsplit+ "|" + mafconvert+ " -f "+ refgenome_target_db +".dict sam -r \"ID:"+ fastq +" PL:nanopore SM:"+ fastq +"\" /dev/stdin | "+ opt.sambamba+ " view -S -f bam /dev/stdin | "+ opt.sambamba + " sort -t 1 /dev/stdin -o "+ outdir+"/bam/"+ folder+"_"+str(x) +"/"+fastq+".sorted.bam\n")
-        elif gz=="on":
-           write_file.write("zcat "+str(item)+"| sed -n \'"+str(position[0])+","+ str(position[1])+"\'p | "+ lastal_src+" -Q 1 -p "+lastparam+" "+refgenome_target_db + " -P 1 /dev/stdin |"+ lastsplit+ "|" + mafconvert+ " -f "+ refgenome_target_db +".dict sam -r \"ID:"+ fastq +" PL:nanopore SM:"+ fastq +"\" /dev/stdin | "+ opt.sambamba+ " view -S -f bam /dev/stdin | "+ opt.sambamba + " sort -t 1 /dev/stdin -o "+ outdir+"/bam/"+ folder+"_"+str(x) +"/"+fastq+".sorted.bam\n") 
+        if opt.blacklist:
+            if fastq.split("_")[0] in dic_bl:
+                if "OK" in dic_bl[fastq.split("_")[0]]:
+                    readf="pass"
+                else:
+                    readf="fail"   
+            else:
+                readf="fail"  
+                print "Not found"+str(fastq.split("_")[0])
+        else: # if no blacklist, all reads are passed
+             readf="pass"
 
-        ## Add Bam to TAR ball
-        write_file.write("cd "+outdir+"/bam/"+ folder+"_"+str(x) +"/\n") 
-        write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".sorted.bam*\n")
+        if readf == "pass": 
+            ### Make BAM file
+            if gz=="off":
+                write_file.write("cat "+str(item)+"| sed -n \'"+str(position[0])+","+ str(position[1])+"\'p | "+ lastal_src+" -Q 1 -p "+lastparam+" "+refgenome_target_db + " -P 1 /dev/stdin |"+ lastsplit+ "|" + mafconvert+ " -f "+ refgenome_target_db +".dict sam -r \"ID:"+ fastq +" PL:nanopore SM:"+ fastq +"\" /dev/stdin | "+ opt.sambamba+ " view -S -f bam /dev/stdin | "+ opt.sambamba + " sort -t 1 /dev/stdin -o "+ outdir+"/bam/"+ folder+"_"+str(x) +"/"+fastq+".sorted.bam\n")
+            elif gz=="on":
+               write_file.write("zcat "+str(item)+"| sed -n \'"+str(position[0])+","+ str(position[1])+"\'p | "+ lastal_src+" -Q 1 -p "+lastparam+" "+refgenome_target_db + " -P 1 /dev/stdin |"+ lastsplit+ "|" + mafconvert+ " -f "+ refgenome_target_db +".dict sam -r \"ID:"+ fastq +" PL:nanopore SM:"+ fastq +"\" /dev/stdin | "+ opt.sambamba+ " view -S -f bam /dev/stdin | "+ opt.sambamba + " sort -t 1 /dev/stdin -o "+ outdir+"/bam/"+ folder+"_"+str(x) +"/"+fastq+".sorted.bam\n") 
 
-        # Extract BAM file from TAR ball and stdout to command to make m5
-        write_file.write("tar -axf "+outdir+"/bam/"+ folder+"_"+str(x) +"/"+folder+"_"+str(x)+".tar "+ fastq+".sorted.bam -O | python "+opt.bam2m5+ " - "+refgenome_target+ " "+ outdir+"/m5/"+ folder+"_"+str(x) +"/"+ fastq+".sorted.m5\n")
+            ## Add Bam to TAR ball
+            write_file.write("cd "+outdir+"/bam/"+ folder+"_"+str(x) +"/\n") 
+            write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".sorted.bam*\n")
 
-        ## Add m5 to TAR ball
-        write_file.write("cd "+outdir+"/m5/"+ folder+"_"+str(x) +"/\n")
-        write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".sorted.m5*\n")
+            # Extract BAM file from TAR ball and stdout to command to make m5
+            write_file.write("tar -axf "+outdir+"/bam/"+ folder+"_"+str(x) +"/"+folder+"_"+str(x)+".tar "+ fastq+".sorted.bam -O | python "+opt.bam2m5+ " - "+refgenome_target+ " "+ outdir+"/m5/"+ folder+"_"+str(x) +"/"+ fastq+".sorted.m5\n")
 
-        # Extract M5 file from TAR ball and stdout to command
-        write_file.write("tar -axf "+outdir+"/m5/"+ folder+"_"+str(x) +"/"+folder+"_"+str(x)+".tar "+ fastq+".sorted.m5 -O |" + opt.pbdagcon+ " - "+" -m "+str(cons_len)+" -c "+str(coverage)+" -t "+str(trim)+" -j "+str(threads)+" > " + outdir+"/consensus/"+ folder+"_"+str(x) +"/"+ fastq+".consensus\n")
-        write_file.write("sed -i \'s/>/>"+f.keys()[0]+"_/g\' "+ outdir+"/consensus/"+ folder+"_"+str(x) +"/"+fastq+".consensus\n")
+            ## Add m5 to TAR ball
+            write_file.write("cd "+outdir+"/m5/"+ folder+"_"+str(x) +"/\n")
+            write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".sorted.m5*\n")
 
-        ## Add consensus to TAR ball
-        write_file.write("cd "+outdir+"/consensus/"+ folder+"_"+str(x) +"/\n")
-        write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".consensus*\n")
+            # Extract M5 file from TAR ball and stdout to command
+            write_file.write("echo "+str(fastq)+" >> "+ str(outdir)+"/consensus/Full_insert_count_"+folder+"_"+str(x)+".txt\n")
+            write_file.write("tar -axf "+outdir+"/m5/"+ folder+"_"+str(x) +"/"+folder+"_"+str(x)+".tar "+ fastq+".sorted.m5 -O |" + opt.pbdagcon+ " - "+" -m "+str(cons_len)+" -c "+str(coverage)+" -t "+str(trim)+" -j "+str(threads)+" 1> " + outdir+"/consensus/"+ folder+"_"+str(x) +"/"+ fastq+".consensus" + " 2>> "+str(outdir)+"/consensus/Full_insert_count_"+folder+"_"+str(x)+".txt\n" )
+            write_file.write("sed -i \'s/>/>"+f.keys()[0]+"_/g\' "+ outdir+"/consensus/"+ folder+"_"+str(x) +"/"+fastq+".consensus\n")
+
+            ## Add consensus to TAR ball
+            write_file.write("cd "+outdir+"/consensus/"+ folder+"_"+str(x) +"/\n")
+            write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".consensus*\n")
 
         if c==number-1:
             list+=[outdir+"/x"+folder+"_job_"+str(x)+".sh"]
@@ -225,7 +251,7 @@ write_file.write("cd "+str(outdir)+"/SH\n")
 write_file.write("zip -m SH.zip *\n")
 write_file.close()
 
-action=("qsub -cwd -q all.q -P "+str(project)+ " -l h_rt=0:05:00 -l h_vmem=1G "+" -hold_jid "+str(",".join(hold_id))+" "+str(outdir)+"/cleanup.sh" + " -o "  +str(outdir)+"/SH/"+ " -e " + str(outdir)+"/SH/" + " -m baes -M "+str(opt.mail))
+action=("qsub -cwd -q all.q -P "+str(project)+ " -l h_rt=1:0:00 -l h_vmem=1G "+" -hold_jid "+str(",".join(hold_id))+" "+str(outdir)+"/cleanup.sh" + " -o "  +str(outdir)+"/SH/"+ " -e " + str(outdir)+"/SH/" + " -m baes -M "+str(opt.mail))
 commands.getoutput(action)
 
 print "All jobs sumbitted" 

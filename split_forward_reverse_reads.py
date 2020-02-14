@@ -10,6 +10,7 @@ if __name__ == "__main__":
         group.add_option("-i", dest="wkdir", metavar="[PATH]", help="full path to BAM input folder [default = ./")
         group.add_option("-o", dest="outdir", metavar="[PATH]", help="full path to output folder [default = ./")
         group.add_option("-b", default="/hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa", dest="bwa", metavar="[PATH]", help="full path to bwa binary [default = /hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa ]")
+        group.add_option("-g", dest="gene", metavar="[STRING]", help="gene of interest [default = TP53")
         group.add_option("--sa", default="/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba", dest="sambamba", metavar="[PATH]", help="full path to sambamba binary [default = /hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba]")
         group.add_option("--b5", default="/hpc/cog_bioinf/ridder/tools/bam2m5/bam2m5.py", dest="bam2m5", metavar="[PATH]", help="full path to bam2m5 binary [default = /hpc/cog_bioinf/ridder/tools/bam2m5/bam2m5.py]")
         group.add_option("--rf", default="/hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version9/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest="refgenome_full", metavar="[PATH]", help="full path to complete reference genome [default = /hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome//version9/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
@@ -23,6 +24,11 @@ outfolder= opt.outdir
 if outfolder.endswith('/'): # chop last "/" if present
     outfolder=outfolder[0:-1]
 
+
+if opt.gene:
+    gene=str(opt.gene)
+else:
+    gene="TP53"
 
 # Log GIT version + commit of repository
 if str(sys.argv[0]) == "python":
@@ -57,7 +63,7 @@ for folder in os.listdir(infolder):
                 forward=0
                 reverse=0
                 for line in in_file:
-                    if "TP53" in line.reference_name:
+                    if str(gene) in line.reference_name:
                         if line.flag == 16:
                             reverse+=1
                         else:

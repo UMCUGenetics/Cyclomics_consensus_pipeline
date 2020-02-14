@@ -6,7 +6,8 @@ from optparse import OptionGroup
 if __name__ == "__main__":
         parser = OptionParser();
         group = OptionGroup(parser, "Main options")
-        group.add_option("-i", dest="wkdir", metavar="[PATH]", help="full path to  m5 folder [default = ./]")
+        group.add_option("--im", dest="m5dir", metavar="[PATH]", help="full path to  m5 folder [default = ./]")
+        group.add_option("--ib", dest="bamdir", metavar="[PATH]", help="full path to  bam folder [default = ./]")
         group.add_option("-o", dest="outdir", metavar="[PATH]", help="full path to output folder [default = ./")
         group.add_option("-p", default="/hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon", dest="pbdagcon", metavar="[PATH]", help="full path to pbgadcon binary [default = /hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon]")
         group.add_option("--param", default=" -c 1 -t 0 -j 2 ", dest="param", metavar="[STRING]", help="pbdagcon paramteres [default =  -c 2 -t 0 -j 2 ]")
@@ -27,23 +28,30 @@ if __name__ == "__main__":
 pbdagcon=opt.pbdagcon
 param=" -m "+str(opt.cons_len)+str(opt.param)
 
-if opt.wkdir:
-    cwd=opt.wkdir
-else:
-    cwd = os.getcwd()
+
+bamfolder=opt.bamdir
+
+m5folder=opt.m5dir
+bamfolder=opt.bamdir
+
+#if opt.wkdir:
+#    cwd=opt.wkdir
+#else:
+#    cwd = os.getcwd()
 
 if opt.outdir:
     outfolder=opt.outdir
 else:
     outfolder = os.getcwd()
 
-infolder = opt.wkdir
 sambamba=opt.sambamba
 bwa=opt.bwa
 refgenome_full=opt.refgenome_full
 os.system("mkdir "+str(outfolder)+"/tmp")
 os.system("mkdir "+str(outfolder)+"/SH")
 os.system("mkdir "+str(outfolder)+"/bin_consensus")
+os.system("mkdir "+str(outfolder)+"/bin_consensus_folder")
+
 mail=opt.mail
 project=opt.project
 insert=opt.insert
@@ -58,32 +66,51 @@ else:
 os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outfolder)+"/GIT_bin_on_repeat_count.log")
 os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outfolder)+"/GIT_bin_on_repeat_count.log")
 
+job_id=[]
+for folder in os.listdir(bamfolder):
+    if os.path.isfile(str(bamfolder)+"/"+str(folder)+"/"+str(folder).split("/")[-1]+".tar"):
+        bamtarfile = str(bamfolder)+"/"+str(folder)+"/"+str(folder).split("/")[-1]+".tar"
+        m5tarfile = str(m5folder)+"/"+str(folder)+"/"+str(folder).split("/")[-1]+".tar"
+        files=commands.getoutput("tar -tf "+str(bamtarfile)).split()
+        write_file=open(str(outfolder)+"/SH/"+str(folder)+".sh","w")
+        for f in files:
+            insert_count=0
+            if "bai" not in str(f):
+                os.system("tar -axf "+str(bamtarfile)+ " "+ str(f)+"*")
+                insert_count=commands.getoutput(str(sambamba)+ " depth base -L "+str(insert)+ " " + str(f) + "| cut -f3| sort -nk3 | head -n1").split("\n")
+                if len(insert_count)> 1 and "failed" not in str(insert_count):
+                    insert_count=insert_count[1]
+                else:
+                    insert_count=0  
+                os.system("rm "+ str(f)+"*")
+            
+                if str(insert_count) == "0" or str(insert_count) == "COV":
+                    pass
+                elif int(insert_count) >= 40:
+                    write_file.write("tar -axf "+str(m5tarfile)+ " "+ str(f[0:-11])+ "* -O | " + str(pbdagcon)+" - "+ param + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"/bin_consensus_folder/"+str(folder)+"_consensus_40+.fasta\n")
+                else:
+                    for x in xrange(1, 40):
+                        if int(insert_count) == x:
+                            write_file.write("tar -axf "+str(m5tarfile)+ " "+ str(f[0:-11])+ "* -O | " + str(pbdagcon)+" - "+ param + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"/bin_consensus_folder/"+str(folder)+"_consensus_"+str(x)+".fasta\n")
 
-for folder in os.listdir(infolder):
-    tarfile = str(infolder)+"/"+str(folder)+"/"+str(folder).split("/")[-1]+".tar"
-    files=commands.getoutput("tar -tf "+str(tarfile)).split()
-    for f in files:
-        in_file=commands.getoutput("tar -axf "+str(tarfile)+ " "+ str(f)+ " -O ").split()
-        insert_count=0
-        for line in in_file:
-            if str(insert) in line: 
-                ## count specific reads for variable 'insert'. e.g. if TP53, backbone counts will not be taken into account
-                ## pitfall for multi-exon experiments: e.g. all TP53 insert will be counted as insert. Could be improved if mapping location if also included.
-                insert_count+=1
-        ## notice that in pbdagcon both insert and backbone are parsed into fasta. Only one 1 is count-selection performed
-        if insert_count == 0:
-            pass
-        elif insert_count >= 40:
-            os.system("tar -axf "+str(tarfile)+ " "+ str(f)+ " -O | " + str(pbdagcon)+" - "+ param + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"//bin_consensus/consensus_40+.fasta")
-        else:
-            for x in xrange(1, 40):
-                if insert_count == x:
-                    os.system("tar -axf "+str(tarfile)+ " "+ str(f)+ " -O | " + str(pbdagcon)+" - "+ param + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"//bin_consensus/consensus_"+str(x)+".fasta")
+    write_file.close()
+    action="qsub -q all.q -P "+str(project)+" -l h_rt="+str(opt.timeslot)+" -l h_vmem=10G -cwd -pe threaded 1 -o "+str(outfolder)+"/SH/"+str(folder)+".output -e "+ str(outfolder)+"/SH/"+str(folder)+".error -m a -M "+ str(mail) + " "+ str(outfolder)+"/SH/"+str(folder)+".sh"
+    job_id+= [commands.getoutput(action).split()[2]]
+
+
+
+write_file=open(str(outfolder)+"/SH/merge_fasta.sh","w")
+for x in xrange(1, 40):
+    write_file.write("find "+str(outfolder)+"/bin_consensus_folder/ -iname \"*_consensus_"+str(x)+".fasta\" -exec cat {} \; >> "+str(outfolder)+"/bin_consensus/consensus_"+str(x)+".fasta\n")
+write_file.write("find "+str(outfolder)+"/bin_consensus_folder/ -iname \"*_consensus_40+.fasta\" -exec cat {} \; >> "+str(outfolder)+"/bin_consensus/consensus_40+.fasta\n")
+write_file.close()
+action= "qsub -q all.q -P "+str(project)+" -l h_rt=2:0:0 -l h_vmem=20G -cwd -pe threaded 1 -o "+ str(outfolder)+"/SH/merge_fasta.output -e "+ str(outfolder)+"/SH/merge_fasta.error -m a -M "+ str(mail) + " -hold_jid "+str(",".join(job_id))+" "+str(outfolder)+"/SH/merge_fasta.sh" 
+job_id_merge=commands.getoutput(action).split()[2]
 
 job_id=[]
 def write_new_file(x,job_id):
     runid="consensus_"+str(x)
-    write_file=open(str(outfolder)+"/SH/"+str(runid)+".sh","w")
+    write_file=open(str(outfolder)+"/SH/"+str(runid)+"_mapping.sh","w")
     write_file.write(bwa + " mem -t "+str(opt.threads)+" -c 100 -M -R \"@RG\\tID:"+runid+"\\tSM:"+runid+"\\tPL:NANOPORE\\tLB:"+runid+"\" "+refgenome_full+" "+str(outfolder)+"//bin_consensus/"+runid+".fasta > "+str(outfolder)+"/"+runid+"_full_consensus.sam\n")
     write_file.write(sambamba+ " view -S -f bam "+str(outfolder)+"/" +runid+"_full_consensus.sam > "+str(outfolder)+"/"+runid+"_full_consensus.bam\n")
     write_file.write(sambamba+ " sort -t "+str(opt.threads)+" --tmpdir=./tmp"+" "+str(outfolder)+"/"+runid+"_full_consensus.bam -o "+str(outfolder)+"/"+runid+"_full_consensus.sorted.bam\n")
@@ -95,17 +122,24 @@ def write_new_file(x,job_id):
     write_file.write("mv "+str(outfolder)+"/"+runid+"_full_consensus.sorted.bam* "+str(outfolder)+"/bin_consensus/\n")
     write_file.write("sleep 2\n")
     write_file.close()
-    action="qsub -q all.q -P "+str(project)+" -l h_rt="+str(opt.timeslot)+" -l h_vmem="+str(opt.max_mem)+"G -cwd -pe threaded "+str(opt.threads)+" "+str(outfolder)+"/SH/"+str(runid+".sh") + " -o "+str(outfolder)+"/SH/"+str(runid+".output")+ " -e ./SH/" + str(runid+".error") +" -m a -M "+ str(mail)
+    action="qsub -q all.q -P "+str(project)+" -l h_rt="+str(opt.timeslot)+" -l h_vmem="+str(opt.max_mem)+"G -cwd -pe threaded "+str(opt.threads)+ " -o "+str(outfolder)+"/SH/"+str(runid)+".output"+ " -e "+str(outfolder)+"/SH/" + str(runid)+".error" +" -m a -M "+ str(mail)+ " -hold_jid "+str(job_id_merge) + " "+str(outfolder)+"/SH/"+str(runid)+"_mapping.sh"
+    #print "jrrp", action
     job_id+= [commands.getoutput(action).split()[2]]
     return job_id
 
 for x in xrange(1, 40):
+    #if os.path.isfile(str(outfolder)+"/bin_consensus/consensus_"+str(x)+".fasta"):
     job_id=write_new_file(x,job_id)
+
+#if os.path.isfile(str(outfolder)+"/bin_consensus/consensus_40+.fasta"):
+#    job_id=write_new_file("40+",job_id)
+
 job_id=write_new_file("40+",job_id)
+
 
 # cleanup
 write_file=open(str(outfolder)+"/SH/cleanup.sh","w")
 write_file.write("mv "+str(outfolder)+"/*sh* SH\n")
 write_file.close()
-action=("qsub -cwd -q all.q -P "+str(project)+ " -l h_rt=00:05:00 -l h_vmem=4G "+" -hold_jid "+str(",".join(job_id))+" "+str(outfolder)+"/SH/cleanup.sh" + " -o "  +str(outfolder)+"/SH/"+ " -e " + str(outfolder)+"/SH/" + " -m ae -M "+str(opt.mail))
+action=("qsub -cwd -q all.q -P "+str(project)+ " -l h_rt=00:05:00 -l h_vmem=4G "+" -hold_jid "+str(",".join(job_id))+" -o "  +str(outfolder)+"/SH/"+ " -e " + str(outfolder)+"/SH/" + " -m baes -M "+str(opt.mail)) + " "+str(outfolder)+"/SH/cleanup.sh"
 os.system(action)
