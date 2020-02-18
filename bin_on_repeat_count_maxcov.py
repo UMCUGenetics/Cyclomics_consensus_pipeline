@@ -93,9 +93,9 @@ for folder in os.listdir(bamfolder):
                         if int(insert_count) == x:
                             write_file.write("tar -axf "+str(m5tarfile)+ " "+ str(f[0:-11])+ "* -O | " + str(pbdagcon)+" - "+ param + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"/bin_consensus_folder/"+str(folder)+"_consensus_"+str(x)+".fasta\n")
 
-    write_file.close()
-    action="qsub -q all.q -P "+str(project)+" -l h_rt="+str(opt.timeslot)+" -l h_vmem=10G -cwd -pe threaded 1 -o "+str(outfolder)+"/SH/"+str(folder)+".output -e "+ str(outfolder)+"/SH/"+str(folder)+".error -m a -M "+ str(mail) + " "+ str(outfolder)+"/SH/"+str(folder)+".sh"
-    job_id+= [commands.getoutput(action).split()[2]]
+        write_file.close()
+        action="qsub -q all.q -P "+str(project)+" -l h_rt="+str(opt.timeslot)+" -l h_vmem=10G -cwd -pe threaded 1 -o "+str(outfolder)+"/SH/"+str(folder)+".output -e "+ str(outfolder)+"/SH/"+str(folder)+".error -m a -M "+ str(mail) + " "+ str(outfolder)+"/SH/"+str(folder)+".sh"
+        job_id+= [commands.getoutput(action).split()[2]]
 
 
 
