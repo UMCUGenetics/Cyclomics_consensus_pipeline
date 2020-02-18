@@ -10,7 +10,7 @@ if __name__ == "__main__":
         group.add_option("--ib", dest="bamdir", metavar="[PATH]", help="full path to  bam folder [default = ./]")
         group.add_option("-o", dest="outdir", metavar="[PATH]", help="full path to output folder [default = ./")
         group.add_option("-p", default="/hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon", dest="pbdagcon", metavar="[PATH]", help="full path to pbgadcon binary [default = /hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon]")
-        group.add_option("--param", default=" -c 1 -t 0 -j 2 ", dest="param", metavar="[STRING]", help="pbdagcon paramteres [default =  -c 2 -t 0 -j 2 ]")
+        #group.add_option("--param", default=" -c 1 -t 0 -j 2 ", dest="param", metavar="[STRING]", help="pbdagcon paramteres [default =  -c 2 -t 0 -j 2 ]")
         group.add_option("--sa", default="/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba", dest="sambamba", metavar="[PATH]", help="full path to sambamba binary [default = /hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba]")
         group.add_option("-b", default="/hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa", dest="bwa", metavar="[PATH]", help="full path to bwa binary [default = /hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa ]")
         group.add_option("--rf", default="/hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest="refgenome_full", metavar="[PATH]", help="full path to complete reference genome [default = /hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
@@ -26,8 +26,11 @@ if __name__ == "__main__":
 
 
 pbdagcon=opt.pbdagcon
-param=" -m "+str(opt.cons_len)+str(opt.param)
+#param=" -m "+str(opt.cons_len)+str(opt.param)
 
+
+param1= " -m "+str(opt.cons_len)+" -c "
+param2= " -t 0 -j 2 "
 
 bamfolder=opt.bamdir
 
@@ -87,15 +90,20 @@ for folder in os.listdir(bamfolder):
                 if str(insert_count) == "0" or str(insert_count) == "COV":
                     pass
                 elif int(insert_count) >= 40:
-                    write_file.write("tar -axf "+str(m5tarfile)+ " "+ str(f[0:-11])+ "* -O | " + str(pbdagcon)+" - "+ param + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"/bin_consensus_folder/"+str(folder)+"_consensus_40+.fasta\n")
+                    threshold = 38
+                    write_file.write("tar -axf "+str(m5tarfile)+ " "+ str(f[0:-11])+ "* -O | " + str(pbdagcon)+" - "+ str(param1)+ str(threshold)+ str(param2) + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"/bin_consensus_folder/"+str(folder)+"_consensus_40+.fasta\n")
                 else:
                     for x in xrange(1, 40):
+                        if x > 3:
+                            threshold = x - 2
+                        else:
+                            threshold = 1
                         if int(insert_count) == x:
-                            write_file.write("tar -axf "+str(m5tarfile)+ " "+ str(f[0:-11])+ "* -O | " + str(pbdagcon)+" - "+ param + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"/bin_consensus_folder/"+str(folder)+"_consensus_"+str(x)+".fasta\n")
+                            write_file.write("tar -axf "+str(m5tarfile)+ " "+ str(f[0:-11])+ "* -O | " + str(pbdagcon)+" - "+ str(param1)+ str(threshold)+ str(param2) + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"/bin_consensus_folder/"+str(folder)+"_consensus_"+str(x)+".fasta\n")
 
-        write_file.close()
-        action="qsub -q all.q -P "+str(project)+" -l h_rt="+str(opt.timeslot)+" -l h_vmem=10G -cwd -pe threaded 1 -o "+str(outfolder)+"/SH/"+str(folder)+".output -e "+ str(outfolder)+"/SH/"+str(folder)+".error -m a -M "+ str(mail) + " "+ str(outfolder)+"/SH/"+str(folder)+".sh"
-        job_id+= [commands.getoutput(action).split()[2]]
+    write_file.close()
+    action="qsub -q all.q -P "+str(project)+" -l h_rt="+str(opt.timeslot)+" -l h_vmem=10G -cwd -pe threaded 1 -o "+str(outfolder)+"/SH/"+str(folder)+".output -e "+ str(outfolder)+"/SH/"+str(folder)+".error -m a -M "+ str(mail) + " "+ str(outfolder)+"/SH/"+str(folder)+".sh"
+    job_id+= [commands.getoutput(action).split()[2]]
 
 
 
