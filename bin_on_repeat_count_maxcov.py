@@ -77,21 +77,24 @@ for folder in os.listdir(bamfolder):
             insert_count=0
             if "bai" not in str(f):
                 os.system("tar -axf "+str(bamtarfile)+ " "+ str(f)+"*")
-                insert_count=commands.getoutput(str(sambamba)+ " depth base -L "+str(insert)+ " " + str(f) + "| cut -f3| sort -nk3 | head -n1").split("\n")
+                insert_count=commands.getoutput(str(sambamba)+ " depth base -L "+str(insert)+ " " + str(f) + "| cut -f3| sort -nk1 | tail -n1").split("\n")  #Last value is highest coverage.
                 if len(insert_count)> 1 and "failed" not in str(insert_count):
                     insert_count=insert_count[1]
                 else:
                     insert_count=0  
                 os.system("rm "+ str(f)+"*")
             
-                if str(insert_count) == "0" or str(insert_count) == "COV":
-                    pass
-                elif int(insert_count) >= 40:
+                #if str(insert_count) == "0" or str(insert_count) == "COV":
+                #    pass
+                if int(insert_count) >= 40:
                     write_file.write("tar -axf "+str(m5tarfile)+ " "+ str(f[0:-11])+ "* -O | " + str(pbdagcon)+" - "+ param + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"/bin_consensus_folder/"+str(folder)+"_consensus_40+.fasta\n")
-                else:
+                elif int(insert_count) > 0 and int(insert_count) <40:
                     for x in xrange(1, 40):
                         if int(insert_count) == x:
                             write_file.write("tar -axf "+str(m5tarfile)+ " "+ str(f[0:-11])+ "* -O | " + str(pbdagcon)+" - "+ param + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"/bin_consensus_folder/"+str(folder)+"_consensus_"+str(x)+".fasta\n")
+
+                else: 
+                    pass
 
         write_file.close()
         action="qsub -q all.q -P "+str(project)+" -l h_rt="+str(opt.timeslot)+" -l h_vmem=10G -cwd -pe threaded 1 -o "+str(outfolder)+"/SH/"+str(folder)+".output -e "+ str(outfolder)+"/SH/"+str(folder)+".error -m a -M "+ str(mail) + " "+ str(outfolder)+"/SH/"+str(folder)+".sh"
