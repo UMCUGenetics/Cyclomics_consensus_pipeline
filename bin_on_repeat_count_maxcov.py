@@ -67,6 +67,8 @@ os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outfolder)+"/
 os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outfolder)+"/GIT_bin_on_repeat_count.log")
 
 job_id=[]
+write_file_cov= open(str(outfolder)+"/SH/"+str(folder)+".sh","w")
+
 for folder in os.listdir(bamfolder):
     if os.path.isfile(str(bamfolder)+"/"+str(folder)+"/"+str(folder).split("/")[-1]+".tar"):
         bamtarfile = str(bamfolder)+"/"+str(folder)+"/"+str(folder).split("/")[-1]+".tar"
@@ -78,12 +80,13 @@ for folder in os.listdir(bamfolder):
             if "bai" not in str(f):
                 os.system("tar -axf "+str(bamtarfile)+ " "+ str(f)+"*")
                 insert_count=commands.getoutput(str(sambamba)+ " depth base -L "+str(insert)+ " " + str(f) + "| cut -f3| sort -nk1 | tail -n1").split("\n")  #Last value is highest coverage.
+                write_file_cov.write(str(f.split("/")[-1])+"\t"+insert_count )
+
                 if len(insert_count)> 1 and "failed" not in str(insert_count):
                     insert_count=insert_count[1]
                 else:
                     insert_count=0  
                 os.system("rm "+ str(f)+"*")
-            
                 #if str(insert_count) == "0" or str(insert_count) == "COV":
                 #    pass
                 if int(insert_count) >= 40:
@@ -100,7 +103,7 @@ for folder in os.listdir(bamfolder):
         action="qsub -q all.q -P "+str(project)+" -l h_rt="+str(opt.timeslot)+" -l h_vmem=10G -cwd -pe threaded 1 -o "+str(outfolder)+"/SH/"+str(folder)+".output -e "+ str(outfolder)+"/SH/"+str(folder)+".error -m a -M "+ str(mail) + " "+ str(outfolder)+"/SH/"+str(folder)+".sh"
         job_id+= [commands.getoutput(action).split()[2]]
 
-
+write_file_cov.close()
 
 write_file=open(str(outfolder)+"/SH/merge_fasta.sh","w")
 for x in xrange(1, 40):
