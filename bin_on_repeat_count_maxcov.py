@@ -9,11 +9,11 @@ if __name__ == "__main__":
         group.add_option("--im", dest="m5dir", metavar="[PATH]", help="full path to  m5 folder [default = ./]")
         group.add_option("--ib", dest="bamdir", metavar="[PATH]", help="full path to  bam folder [default = ./]")
         group.add_option("-o", dest="outdir", metavar="[PATH]", help="full path to output folder [default = ./")
-        group.add_option("-p", default="/hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon", dest="pbdagcon", metavar="[PATH]", help="full path to pbgadcon binary [default = /hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon]")
+        group.add_option("-p", default="/hpc/compgen/tools/pbdagcon/src/cpp/pbdagcon", dest="pbdagcon", metavar="[PATH]", help="full path to pbgadcon binary [default = /hpc/compgen/tools/pbdagcon/src/cpp/pbdagcon]")
         group.add_option("--param", default=" -c 1 -t 0 -j 2 ", dest="param", metavar="[STRING]", help="pbdagcon paramteres [default =  -c 2 -t 0 -j 2 ]")
         group.add_option("--sa", default="/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba", dest="sambamba", metavar="[PATH]", help="full path to sambamba binary [default = /hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba]")
         group.add_option("-b", default="/hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa", dest="bwa", metavar="[PATH]", help="full path to bwa binary [default = /hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa ]")
-        group.add_option("--rf", default="/hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest="refgenome_full", metavar="[PATH]", help="full path to complete reference genome [default = /hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
+        group.add_option("--rf", default="/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest="refgenome_full", metavar="[PATH]", help="full path to complete reference genome [default = /hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
         group.add_option("--project", default="compgen", dest="project", metavar="STRING", help="SGE project for submitting jobs [default compgen]")
         group.add_option("-m", default="m.elferink@umcutrecht.nl", dest="mail", metavar="[STRING]", help="email used for job submitting [default = m.elferink@umcutrecht.nl]")
         group.add_option("-a", default="TP53", dest="insert", metavar="[STRING]", help="name of insert chromosome [default = TP53]")
@@ -67,6 +67,8 @@ os.system("git --git-dir="+str(repo)+"/.git describe --tags >"+str(outfolder)+"/
 os.system("git --git-dir="+str(repo)+"/.git log >>"+str(outfolder)+"/GIT_bin_on_repeat_count.log")
 
 job_id=[]
+write_file_cov= open(str(outfolder)+"/SH/"+str(folder)+".sh","w")
+
 for folder in os.listdir(bamfolder):
     if os.path.isfile(str(bamfolder)+"/"+str(folder)+"/"+str(folder).split("/")[-1]+".tar"):
         bamtarfile = str(bamfolder)+"/"+str(folder)+"/"+str(folder).split("/")[-1]+".tar"
@@ -77,27 +79,31 @@ for folder in os.listdir(bamfolder):
             insert_count=0
             if "bai" not in str(f):
                 os.system("tar -axf "+str(bamtarfile)+ " "+ str(f)+"*")
-                insert_count=commands.getoutput(str(sambamba)+ " depth base -L "+str(insert)+ " " + str(f) + "| cut -f3| sort -nk3 | head -n1").split("\n")
+                insert_count=commands.getoutput(str(sambamba)+ " depth base -L "+str(insert)+ " " + str(f) + "| cut -f3| sort -nk1 | tail -n1").split("\n")  #Last value is highest coverage.
+                write_file_cov.write(str(f.split("/")[-1])+"\t"+insert_count )
+
                 if len(insert_count)> 1 and "failed" not in str(insert_count):
                     insert_count=insert_count[1]
                 else:
                     insert_count=0  
                 os.system("rm "+ str(f)+"*")
-            
-                if str(insert_count) == "0" or str(insert_count) == "COV":
-                    pass
-                elif int(insert_count) >= 40:
+                #if str(insert_count) == "0" or str(insert_count) == "COV":
+                #    pass
+                if int(insert_count) >= 40:
                     write_file.write("tar -axf "+str(m5tarfile)+ " "+ str(f[0:-11])+ "* -O | " + str(pbdagcon)+" - "+ param + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"/bin_consensus_folder/"+str(folder)+"_consensus_40+.fasta\n")
-                else:
+                elif int(insert_count) > 0 and int(insert_count) <40:
                     for x in xrange(1, 40):
                         if int(insert_count) == x:
                             write_file.write("tar -axf "+str(m5tarfile)+ " "+ str(f[0:-11])+ "* -O | " + str(pbdagcon)+" - "+ param + " | sed 's/>/>"+str(f[0:-10])+"_"+"/g' 1>> "+str(outfolder)+"/bin_consensus_folder/"+str(folder)+"_consensus_"+str(x)+".fasta\n")
+
+                else: 
+                    pass
 
         write_file.close()
         action="qsub -q all.q -P "+str(project)+" -l h_rt="+str(opt.timeslot)+" -l h_vmem=10G -cwd -pe threaded 1 -o "+str(outfolder)+"/SH/"+str(folder)+".output -e "+ str(outfolder)+"/SH/"+str(folder)+".error -m a -M "+ str(mail) + " "+ str(outfolder)+"/SH/"+str(folder)+".sh"
         job_id+= [commands.getoutput(action).split()[2]]
 
-
+write_file_cov.close()
 
 write_file=open(str(outfolder)+"/SH/merge_fasta.sh","w")
 for x in xrange(1, 40):

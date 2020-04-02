@@ -30,8 +30,8 @@ if __name__ == "__main__":
         group.add_option("-e", default="/hpc/compgen/tools/bam2m5/env_3.6/bin/activate", dest="env", metavar="[ENV]", help="full path to python enviroment [default = ihpc/compgen/tools/bam2m5_new/env_3.6/bin/activate ]")
         group.add_option("--b5", default="/hpc/compgen/tools/bam2m5/bam2m5.py", dest="bam2m5", metavar="[PATH]", help="full path to bam2m5 binary [default = /hpc/compgen/tools/bam2m5_new/bam2m5.py]")
         group.add_option("--pbdagcon", default="/hpc/compgen/tools/pbdagcon/src/cpp/pbdagcon", dest="pbdagcon", metavar="[PATH]", help="full path to pbgadcon binary [default = /hpc/compgen/tools/pbdagcon/src/cpp/pbdagcon ]")
-        group.add_option("--rf", default="/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest="refgenome_full", metavar="[PATH]", help="full path to complete reference genome [default = /hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
-        group.add_option("--rt", default="/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/BRAF_TP53_EGFR_BB_pjet.fasta", dest="refgenome_target", metavar="[PATH]", help="full path to targeted reference genome [default = /hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/BRAF_TP53_EGFR_BB_pjet.fasta]")
+        group.add_option("--rf", default="/hpc/compgen/GENOMES/Cyclomics_reference_genome/version9/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest="refgenome_full", metavar="[PATH]", help="full path to complete reference genome [default = /hpc/compgen/GENOMES/Cyclomics_reference_genome//version9/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
+        group.add_option("--rt", default="/hpc/compgen/GENOMES/Cyclomics_reference_genome/version9/BRAF_TP53_BB_pjet.fasta", dest="refgenome_target", metavar="[PATH]", help="full path to targeted reference genome [default = /hpc/compgen/GENOMES/Cyclomics_reference_genome/version9/BRAF_TP53_BB_pjet.fasta]")
         parser.add_option_group(group)
         (opt, args) = parser.parse_args()
 
@@ -158,54 +158,71 @@ for item in line_dic:
     write_file=open(outdir+"/x"+folder+"_job_"+str(x)+".sh","w")
     write_file.write(". "+opt.env+"\n")
     write_file.write("echo \"Start poststats    \" `date` \"    \" `uname -n`\n\n")
-    os.system("mkdir -p "+ outdir+"/bam/"+ folder+"_"+str(x))
-    os.system("mkdir -p "+ outdir+"/m5/"+ folder+"_"+str(x))
-    os.system("mkdir -p "+ outdir+"/consensus/"+ folder+"_"+str(x))
+
+    write_file.write("mkdir -p $TMPDIR/FASTQ\n")
+    write_file.write("mkdir -p $TMPDIR"+ outdir+"/bam/"+ folder+"_"+str(x)+"\n")
+    write_file.write("mkdir -p $TMPDIR"+ outdir+"/m5/"+ folder+"_"+str(x)+"\n")
+    write_file.write("mkdir -p $TMPDIR"+ outdir+"/consensus/"+ folder+"_"+str(x)+"\n")
+    write_file.write("mkdir -p "+ outdir+"/bam/"+ folder+"_"+str(x)+"\n")
+    write_file.write("mkdir -p "+ outdir+"/m5/"+ folder+"_"+str(x)+"\n")
+    write_file.write("mkdir -p "+ outdir+"/consensus/"+ folder+"_"+str(x)+"\n")
+    write_file.write("cp "+str(item)+" "+"$TMPDIR/FASTQ\n")    
 
     for f in line_dic[item]:
         total+=1
         position=f.values()[0]
         fastq=f.keys()[0]
+
         if opt.blacklist:
             if fastq.split("_")[0] in dic_bl:
-                if "OK" not in dic_bl[fastq.split("_")[0]]:
-                    readf="fail"
+                if "OK" in dic_bl[fastq.split("_")[0]]:
+                    readf="pass"
                 else:
-                    readf="pass" 
+                    readf="fail"   
             else:
-                readf="pass"  
+                readf="fail"  
+                print "Not found"+str(fastq.split("_")[0])
         else: # if no blacklist, all reads are passed
              readf="pass"
 
         if readf == "pass": 
             ### Make BAM file
             if gz=="off":
-                write_file.write("cat "+str(item)+"| sed -n \'"+str(position[0])+","+ str(position[1])+"\'p | "+ lastal_src+" -Q 1 -p "+lastparam+" "+refgenome_target_db + " -P 1 /dev/stdin |"+ lastsplit+ "|" + mafconvert+ " -f "+ refgenome_target_db +".dict sam -r \"ID:"+ fastq +" PL:nanopore SM:"+ fastq +"\" /dev/stdin | "+ opt.sambamba+ " view -S -f bam /dev/stdin | "+ opt.sambamba + " sort -t 1 /dev/stdin -o "+ outdir+"/bam/"+ folder+"_"+str(x) +"/"+fastq+".sorted.bam\n")
+                write_file.write("cat $TMPDIR/FASTQ/"+str(item.split("/")[-1])+"| sed -n \'"+str(position[0])+","+ str(position[1])+"\'p | "+ lastal_src+" -Q 1 -p "+lastparam+" "+refgenome_target_db + " -P 1 /dev/stdin |"+ lastsplit+ "|" + mafconvert+ " -f "+ refgenome_target_db +".dict sam -r \"ID:"+ fastq +" PL:nanopore SM:"+ fastq +"\" /dev/stdin | "+ opt.sambamba+ " view -S -f bam /dev/stdin | "+ opt.sambamba + " sort -t 1 /dev/stdin -o $TMPDIR"+ outdir+"/bam/"+ folder+"_"+str(x) +"/"+fastq+".sorted.bam\n")
+                #write_file.write("cat $TMPDIR"+str(item)+"| sed -n \'"+str(position[0])+","+ str(position[1])+"\'p | "+ lastal_src+" -Q 1 -p "+lastparam+" "+refgenome_target_db + " -P 1 /dev/stdin |"+ lastsplit+ "|" + mafconvert+ " -f "+ refgenome_target_db +".dict sam -r \"ID:"+ fastq +" PL:nanopore SM:"+ fastq +"\" /dev/stdin | "+ opt.sambamba+ " view -S -f bam /dev/stdin | "+ opt.sambamba + " sort -t 1 /dev/stdin -o $TMPDIR"+ outdir+"/bam/"+ folder+"_"+str(x) +"/"+fastq+".sorted.bam\n")
             elif gz=="on":
-               write_file.write("zcat "+str(item)+"| sed -n \'"+str(position[0])+","+ str(position[1])+"\'p | "+ lastal_src+" -Q 1 -p "+lastparam+" "+refgenome_target_db + " -P 1 /dev/stdin |"+ lastsplit+ "|" + mafconvert+ " -f "+ refgenome_target_db +".dict sam -r \"ID:"+ fastq +" PL:nanopore SM:"+ fastq +"\" /dev/stdin | "+ opt.sambamba+ " view -S -f bam /dev/stdin | "+ opt.sambamba + " sort -t 1 /dev/stdin -o "+ outdir+"/bam/"+ folder+"_"+str(x) +"/"+fastq+".sorted.bam\n") 
+               write_file.write("zcat $TMPDIR/FASTQ/"+str(item.split("/")[-1])+"| sed -n \'"+str(position[0])+","+ str(position[1])+"\'p | "+ lastal_src+" -Q 1 -p "+lastparam+" "+refgenome_target_db + " -P 1 /dev/stdin |"+ lastsplit+ "|" + mafconvert+ " -f "+ refgenome_target_db +".dict sam -r \"ID:"+ fastq +" PL:nanopore SM:"+ fastq +"\" /dev/stdin | "+ opt.sambamba+ " view -S -f bam /dev/stdin | "+ opt.sambamba + " sort -t 1 /dev/stdin -o $TMPDIR"+ outdir+"/bam/"+ folder+"_"+str(x) +"/"+fastq+".sorted.bam\n")
+               #write_file.write("zcat $TMPDIR"+str(item)+"| sed -n \'"+str(position[0])+","+ str(position[1])+"\'p | "+ lastal_src+" -Q 1 -p "+lastparam+" "+refgenome_target_db + " -P 1 /dev/stdin |"+ lastsplit+ "|" + mafconvert+ " -f "+ refgenome_target_db +".dict sam -r \"ID:"+ fastq +" PL:nanopore SM:"+ fastq +"\" /dev/stdin | "+ opt.sambamba+ " view -S -f bam /dev/stdin | "+ opt.sambamba + " sort -t 1 /dev/stdin -o $TMPDIR"+ outdir+"/bam/"+ folder+"_"+str(x) +"/"+fastq+".sorted.bam\n") 
 
             ## Add Bam to TAR ball
-            write_file.write("cd "+outdir+"/bam/"+ folder+"_"+str(x) +"/\n") 
-            write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".sorted.bam*\n")
+            write_file.write("cd $TMPDIR"+outdir+"/bam/"+ folder+"_"+str(x) +"/\n") 
+            write_file.write("tar --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".sorted.bam*\n")
 
             # Extract BAM file from TAR ball and stdout to command to make m5
-            write_file.write("tar -axf "+outdir+"/bam/"+ folder+"_"+str(x) +"/"+folder+"_"+str(x)+".tar "+ fastq+".sorted.bam -O | python "+opt.bam2m5+ " - "+refgenome_target+ " "+ outdir+"/m5/"+ folder+"_"+str(x) +"/"+ fastq+".sorted.m5\n")
+            write_file.write("tar -axf $TMPDIR"+outdir+"/bam/"+ folder+"_"+str(x) +"/"+folder+"_"+str(x)+".tar "+ fastq+".sorted.bam -O | python "+opt.bam2m5+ " - "+refgenome_target+ " $TMPDIR"+ outdir+"/m5/"+ folder+"_"+str(x) +"/"+ fastq+".sorted.m5\n")
 
             ## Add m5 to TAR ball
-            write_file.write("cd "+outdir+"/m5/"+ folder+"_"+str(x) +"/\n")
+            write_file.write("cd $TMPDIR"+outdir+"/m5/"+ folder+"_"+str(x) +"/\n")
             write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".sorted.m5*\n")
 
             # Extract M5 file from TAR ball and stdout to command
-            write_file.write("echo "+str(fastq)+" >> "+ str(outdir)+"/consensus/Full_insert_count_"+folder+"_"+str(x)+".txt\n")
-            write_file.write("tar -axf "+outdir+"/m5/"+ folder+"_"+str(x) +"/"+folder+"_"+str(x)+".tar "+ fastq+".sorted.m5 -O |" + opt.pbdagcon+ " - "+" -m "+str(cons_len)+" -c "+str(coverage)+" -t "+str(trim)+" -j "+str(threads)+" 1> " + outdir+"/consensus/"+ folder+"_"+str(x) +"/"+ fastq+".consensus" + " 2>> "+str(outdir)+"/consensus/Full_insert_count_"+folder+"_"+str(x)+".txt\n" )
-            write_file.write("sed -i \'s/>/>"+f.keys()[0]+"_/g\' "+ outdir+"/consensus/"+ folder+"_"+str(x) +"/"+fastq+".consensus\n")
+            write_file.write("echo "+str(fastq)+" >> $TMPDIR"+ str(outdir)+"/consensus/Full_insert_count_"+folder+"_"+str(x)+".txt\n")
+            write_file.write("tar -axf $TMPDIR"+outdir+"/m5/"+ folder+"_"+str(x) +"/"+folder+"_"+str(x)+".tar "+ fastq+".sorted.m5 -O |" + opt.pbdagcon+ " - "+" -m "+str(cons_len)+" -c "+str(coverage)+" -t "+str(trim)+" -j "+str(threads)+" 1> $TMPDIR" + outdir+"/consensus/"+ folder+"_"+str(x) +"/"+ fastq+".consensus" + " 2>> $TMPDIR"+str(outdir)+"/consensus/Full_insert_count_"+folder+"_"+str(x)+".txt\n" )
+            write_file.write("sed -i \'s/>/>"+f.keys()[0]+"_/g\' $TMPDIR"+ outdir+"/consensus/"+ folder+"_"+str(x) +"/"+fastq+".consensus\n")
 
             ## Add consensus to TAR ball
-            write_file.write("cd "+outdir+"/consensus/"+ folder+"_"+str(x) +"/\n")
+            write_file.write("cd $TMPDIR"+outdir+"/consensus/"+ folder+"_"+str(x) +"/\n")
             write_file.write("tar  --remove-files -f "+folder+"_"+str(x)+".tar"+ " -r "+fastq+".consensus*\n")
 
         if c==number-1:
             list+=[outdir+"/x"+folder+"_job_"+str(x)+".sh"]
+            #write_file.write("mv $TMPDIR"+ str(outdir)+"/bam/"+folder+"_"+str(x)+" "+ str(outdir)+"/bam/\n")
+            #write_file.write("mv $TMPDIR"+ str(outdir)+"/m5/"+folder+"_"+str(x)+" "+ str(outdir)+"/m5/\n")
+            #write_file.write("mv $TMPDIR"+ str(outdir)+"/consensus/"+folder+"_"+str(x)+" "+ str(outdir)+"/consensus/\n")
+            write_file.write("mv $TMPDIR"+ outdir+"/bam/"+ folder+"_"+str(x)+"/* "+ outdir+"/bam/"+folder+"_"+str(x)+"/\n")
+            write_file.write("mv $TMPDIR"+ outdir+"/m5/"+ folder+"_"+str(x)+"/* "+ outdir+"/m5/"+folder+"_"+str(x)+"/\n")
+            write_file.write("mv $TMPDIR"+ outdir+"/consensus/"+ folder+"_"+str(x)+"/* "+ outdir+"/consensus/"+folder+"_"+str(x)+"/\n")
+            write_file.write("rm $TMPDIR"+str(item)+"\n")
             write_file.close()
             x+=1
             if total == len(line_dic[item]):
@@ -214,21 +231,26 @@ for item in line_dic:
                 write_file=open(outdir+"/x"+folder+"_job_"+str(x)+".sh","w")
                 write_file.write(". "+opt.env+"\n")
                 write_file.write("echo \"Start poststats    \" `date` \"    \" `uname -n`\n")
-                os.system("mkdir "+ outdir+"/bam/"+ folder+"_"+str(x))
-                os.system("mkdir "+ outdir+"/m5/"+ folder+"_"+str(x))
-                os.system("mkdir "+ outdir+"/consensus/"+ folder+"_"+str(x))
-
+                write_file.write("mkdir $TMPDIR"+ outdir+"/bam/"+ folder+"_"+str(x)+"\n")
+                write_file.write("mkdir $TMPDIR"+ outdir+"/m5/"+ folder+"_"+str(x)+"\n")
+                write_file.write("mkdir $TMPDIR"+ outdir+"/consensus/"+ folder+"_"+str(x)+"\n")
             c=0
         else:
             c+=1
 
     list+=[outdir+"/x"+folder+"_job_"+str(x)+".sh"]
+    #write_file.write("mv $TMPDIR"+ str(outdir)+"/bam/"+folder+"_"+str(x)+" "+ str(outdir)+"/bam/\n")
+    #write_file.write("mv $TMPDIR"+ str(outdir)+"/m5/"+folder+"_"+str(x)+" "+ str(outdir)+"/m5/\n")
+    #write_file.write("mv $TMPDIR"+ str(outdir)+"/consensus/"+folder+"_"+str(x)+" "+ str(outdir)+"/consensus/\n")
+    #write_file.write("rm $TMPDIR"+str(item)+"\n")
     write_file.close()
+
+
 
 os.mkdir(outdir+"/SH")
 job_id=[]
 for job in list:
-    action= "qsub -q all.q -P "+ str(project)+ " -l h_rt=" +str(timeslot)+ " -l h_vmem="+str(max_mem)+"G -R y -cwd -pe threaded "+str(threads)+" "+str(job) + " -o "  +str(outdir+"/SH/")+ " -e " + str(outdir+"/SH/" + " -m a -M "+str(opt.mail))
+    action= "qsub -l tmpspace=10G -q all.q -P "+ str(project)+ " -l h_rt=" +str(timeslot)+ " -l h_vmem="+str(max_mem)+"G -R y -cwd -pe threaded "+str(threads)+" "+str(job) + " -o "  +str(outdir+"/SH/")+ " -e " + str(outdir+"/SH/" + " -m a -M "+str(opt.mail))
     job_id+= [commands.getoutput(action).split()[2]]
 
 #runid=wkdir.split("/")[-1]
