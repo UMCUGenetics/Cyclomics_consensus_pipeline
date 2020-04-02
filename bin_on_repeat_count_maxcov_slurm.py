@@ -76,7 +76,10 @@ for folder in os.listdir(bamfolder):
                 os.system("tar -axf "+str(bamtarfile)+ " "+ str(f)+"*")
                 insert_count=commands.getoutput(str(sambamba)+ " depth base -L "+str(insert)+ " " + str(f) + "| cut -f3| sort -nk1 | tail -n1").split("\n")  #Last value is highest coverage.
                 if len(insert_count)> 1 and "failed" not in str(insert_count):
-                    insert_count=insert_count[1]
+                    if "COV" not in insert_count[1]:
+                        insert_count=insert_count[1]
+                    else:
+                        insert_count=0
                 else:
                     insert_count=0  
                 os.system("rm "+ str(f)+"*")
@@ -135,7 +138,7 @@ job_id=write_new_file("40+",job_id)
 
 # cleanup
 write_file=open(str(outfolder)+"/SH/cleanup.sh","w")
-write_file.write("#!/bin/bash\n#SBATCH -t "+str(opt.timeslot)+"\n#SBATCH --mem=10G\n#SBATCH -o "+str(outfolder)+"/SH/"+str(folder)+".output\n#SBATCH -e "+str(outfolder)+"/SH/"+str(folder)+".error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user="+str(mail)+"\n")
+write_file.write("#!/bin/bash\n#SBATCH -t "+str(opt.timeslot)+"\n#SBATCH --mem=10G\n#SBATCH -o "+str(outfolder)+"/SH/cleanup.output\n#SBATCH -e "+str(outfolder)+"/SH/cleanup.error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user="+str(mail)+"\n")
 write_file.write("mv "+str(outfolder)+"/*sh* SH\n")
 write_file.close()
 os.system("sbatch -c 2 --depend="+str(",".join(job_id))+" "+str(outfolder)+"/SH/cleanup.sh")
