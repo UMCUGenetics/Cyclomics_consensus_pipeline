@@ -25,13 +25,13 @@ if __name__ == "__main__":
 
         group.add_option("--bwa", default="/hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa", dest="bwa", metavar="[PATH]", help="full path to bwa binary [default = /hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa ]")
         group.add_option("--sa", default="/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba", dest="sambamba", metavar="[PATH]", help="full path to sambamba binary [default = /hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba]")
-        group.add_option("--la", default="/hpc/cog_bioinf/ridder/tools/last-921/", dest="lastal", metavar="[PATH]", help="full path to lastal binary [default = /hpc/cog_bioinf/ridder/tools/last-921/]")
+        group.add_option("--la", default="/hpc/compgen/tools/last-921/", dest="lastal", metavar="[PATH]", help="full path to lastal binary [default = /hpc/compgen/tools/last-921/]")
 
-        group.add_option("-e", default="/hpc/cog_bioinf/ridder/tools/bam2m5/env_3.6/bin/activate", dest="env", metavar="[ENV]", help="full path to python enviroment [default = ihpc/cog_bioinf/ridder/tools/bam2m5_new/env_3.6/bin/activate ]")
-        group.add_option("--b5", default="/hpc/cog_bioinf/ridder/tools/bam2m5/bam2m5.py", dest="bam2m5", metavar="[PATH]", help="full path to bam2m5 binary [default = /hpc/cog_bioinf/ridder/tools/bam2m5_new/bam2m5.py]")
-        group.add_option("--pbdagcon", default="/hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon", dest="pbdagcon", metavar="[PATH]", help="full path to pbgadcon binary [default = /hpc/cog_bioinf/ridder/tools/pbdagcon/src/cpp/pbdagcon ]")
-        group.add_option("--rf", default="/hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest="refgenome_full", metavar="[PATH]", help="full path to complete reference genome [default = /hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
-        group.add_option("--rt", default="/hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version12/BRAF_TP53_EGFR_BB_pjet.fasta", dest="refgenome_target", metavar="[PATH]", help="full path to targeted reference genome [default = /hpc/cog_bioinf/GENOMES/Cyclomics_reference_genome/version12/BRAF_TP53_EGFR_BB_pjet.fasta]")
+        group.add_option("-e", default="/hpc/compgen/tools/bam2m5/env_3.6/bin/activate", dest="env", metavar="[ENV]", help="full path to python enviroment [default = ihpc/compgen/tools/bam2m5_new/env_3.6/bin/activate ]")
+        group.add_option("--b5", default="/hpc/compgen/tools/bam2m5/bam2m5.py", dest="bam2m5", metavar="[PATH]", help="full path to bam2m5 binary [default = /hpc/compgen/tools/bam2m5_new/bam2m5.py]")
+        group.add_option("--pbdagcon", default="/hpc/compgen/tools/pbdagcon/src/cpp/pbdagcon", dest="pbdagcon", metavar="[PATH]", help="full path to pbgadcon binary [default = /hpc/compgen/tools/pbdagcon/src/cpp/pbdagcon ]")
+        group.add_option("--rf", default="/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest="refgenome_full", metavar="[PATH]", help="full path to complete reference genome [default = /hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
+        group.add_option("--rt", default="/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/BRAF_TP53_EGFR_BB_pjet.fasta", dest="refgenome_target", metavar="[PATH]", help="full path to targeted reference genome [default = /hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/BRAF_TP53_EGFR_BB_pjet.fasta]")
         parser.add_option_group(group)
         (opt, args) = parser.parse_args()
 
