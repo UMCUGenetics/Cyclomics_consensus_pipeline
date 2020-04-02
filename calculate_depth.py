@@ -20,7 +20,7 @@ else:
 
 sambamba="/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba"
 cwd = os.getcwd()
-cosmic= "/hpc/cog_bioinf/ridder/tools/Cyclomics_consensus_pipeline/data_files/COSMIC_mutations.bed"
+cosmic= "/hpc/compgen/tools/Cyclomics_consensus_pipeline/data_files/COSMIC_mutations.bed"
 
 for f in os.listdir(cwd):
     if f.endswith((".sorted.bam")):
