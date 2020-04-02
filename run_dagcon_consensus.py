@@ -166,16 +166,14 @@ for item in line_dic:
         total+=1
         position=f.values()[0]
         fastq=f.keys()[0]
-
         if opt.blacklist:
             if fastq.split("_")[0] in dic_bl:
-                if "OK" in dic_bl[fastq.split("_")[0]]:
-                    readf="pass"
+                if "OK" not in dic_bl[fastq.split("_")[0]]:
+                    readf="fail"
                 else:
-                    readf="fail"   
+                    readf="pass" 
             else:
-                readf="fail"  
-                print "Not found"+str(fastq.split("_")[0])
+                readf="pass"  
         else: # if no blacklist, all reads are passed
              readf="pass"
 
