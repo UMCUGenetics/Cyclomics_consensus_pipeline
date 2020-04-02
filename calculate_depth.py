@@ -16,7 +16,7 @@ dic={}
 if opt.target_key and opt.target_value:
     dic[opt.target_key]=opt.target_value
 else:
-    dic={"exon12":"17:7577000-7577180","BB22":"BB22:1-248","BB24":"BB24:1-248","BB25":"BB25:1-248","BBCR":"BB22:1-248","TP53":"17:7565097-7590856","PJET":"PJET:1-2974","EGFR":"7:55081714-55329313"}
+    dic={"exon12":"17:7577000-7577180","BB22":"BB22:1-248","BB24":"BB24:1-248","BB25":"BB25:1-248","BBCR":"BB22:1-248","TP53":"17:7565097-7590856","PJET":"PJET:1-2974","EGFR":"7:55081714-55329313","BB200_4n":"BB200_4n:1-247"}
 
 sambamba="/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba"
 cwd = os.getcwd()
