@@ -85,7 +85,7 @@ for folder in folders:
             countfolder+=1
             continue
         write_file=open(str(output_file)+".sh","w")
-        write_file.write("#!/bin/bash\n#SBATCH -t "+str(opt.timeslot)+"\n#SBATCH --mem=10G\n#SBATCH -o "+str(output_file)+".output\n#SBATCH -e "+str(output_file)+".error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user="+str(mail)+"\n")
+        write_file.write("#!/bin/bash\n#SBATCH -t "+str(opt.timeslot)+"\n#SBATCH --account="+str(project)+"\n#SBATCH --mem=10G\n#SBATCH -o "+str(output_file)+".output\n#SBATCH -e "+str(output_file)+".error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user="+str(mail)+"\n")
         for f in files:
             insert_count=0
             if "bai" not in str(f):
@@ -127,7 +127,7 @@ for item in folder_dic:
     write_file=open(str(outfolder)+"/SH/"+str(item)+"_array.sh","w")
     write_file.write("#!/bin/bash\n#SBATCH -t "+str(opt.timeslot)
                      +"\n#SBATCH --mem=10G\n#SBATCH -o "+str(outfolder)+"/SH/"+str(folder)+"_%A_%a.output\n#SBATCH -e "+str(outfolder)+"/SH/"+str(folder)
-                     +"_%A_%a.error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user="+str(mail)
+                     +"_%A_%a.error \n#SBATCH --mail-type=FAIL\n#SBATCH --account="+str(project)+"\n#SBATCH --export=NONE\n#SBATCH --mail-user="+str(mail)
                      +"\n#SBATCH --array=0-"+str(int(folder_dic[folder])-1)+"%4\n")
     write_file.write("sh "+str(outfolder)+"/SH/"+str(item)+"_$SLURM_ARRAY_TASK_ID\.sh\n")
     write_file.close()
@@ -135,7 +135,7 @@ for item in folder_dic:
     job_id_make_fasta = job_output.split()[3]
 
 write_file=open(str(outfolder)+"/SH/merge_fasta.sh","w")
-write_file.write("#!/bin/bash\n#SBATCH -t "+str(opt.timeslot)+"\n#SBATCH --mem=10G\n#SBATCH -o "+str(outfolder)+"/SH/"+str(folder)+".output\n#SBATCH -e "+str(outfolder)+"/SH/"+str(folder)+".error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user="+str(mail)+"\n")
+write_file.write("#!/bin/bash\n#SBATCH -t "+str(opt.timeslot)+"\n#SBATCH --mem=10G\n#SBATCH --account="+str(project)+"\n#SBATCH -o "+str(outfolder)+"/SH/"+str(folder)+".output\n#SBATCH -e "+str(outfolder)+"/SH/"+str(folder)+".error \n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user="+str(mail)+"\n")
 for x in xrange(1, 41):
     write_file.write("find "+str(outfolder)+"/bin_consensus_folder/ -iname \"*_consensus_"+str(x)+".fasta\" -exec cat {} \; >> "+str(outfolder)+"/bin_consensus/consensus_"+str(x)+".fasta\n")
 write_file.close()
@@ -148,7 +148,7 @@ test=[]
 def write_new_file(x,test):
     runid="consensus_"+str(x)
     write_file=open(str(outfolder)+"/SH/"+str(runid)+"_mapping.sh","w")
-    write_file.write("#!/bin/bash\n#SBATCH -t "+str(opt.timeslot)+"\n#SBATCH --mem=10G\n#SBATCH -o "+str(outfolder)+"/SH/"+str(runid)+".output\n#SBATCH -e "+str(runid)+"/SH/"+str(folder)+".error \n#SBATCH --mail-user="+str(mail)+"\n")
+    write_file.write("#!/bin/bash\n#SBATCH -t "+str(opt.timeslot)+"\n#SBATCH --account="+str(project)+"\n#SBATCH --mem=10G\n#SBATCH --export=NONE\n#SBATCH -o "+str(outfolder)+"/SH/"+str(runid)+".output\n#SBATCH -e "+str(runid)+"/SH/"+str(folder)+".error \n#SBATCH --mail-user="+str(mail)+"\n")
     write_file.write(bwa + " mem -t "+str(opt.threads)+" -c 100 -M -R \"@RG\\tID:"+runid+"\\tSM:"+runid+"\\tPL:NANOPORE\\tLB:"+runid+"\" "+refgenome_full+" "+str(outfolder)+"//bin_consensus/"+runid+".fasta > "+str(outfolder)+"/"+runid+"_full_consensus.sam\n")
     write_file.write(sambamba+ " view -S -f bam "+str(outfolder)+"/" +runid+"_full_consensus.sam > "+str(outfolder)+"/"+runid+"_full_consensus.bam\n")
     write_file.write(sambamba+ " sort -t "+str(opt.threads)+" --tmpdir=./tmp"+" "+str(outfolder)+"/"+runid+"_full_consensus.bam -o "+str(outfolder)+"/"+runid+"_full_consensus.sorted.bam\n")
@@ -168,8 +168,8 @@ for x in xrange(1, 41):
     test=write_new_file(x,test)
 
 write_file=open(str(outfolder)+"/SH/consensus_calling_array.sh","w")
-write_file.write("#!/bin/bash\n#SBATCH -t "+str(opt.timeslot)
-                 +"\n#SBATCH --mem=10G\n#SBATCH -o "+str(outfolder)+"/SH/consensus_calling_%A_%a.output\n#SBATCH -e "+str(outfolder)+"/SH/consensus_calling_%A_%a.error \n#SBATCH --mail-type=END\n#SBATCH --mail-user="+str(mail)
+write_file.write("#!/bin/bash\n#SBATCH --export=NONE\n#SBATCH -t "+str(opt.timeslot)
+                 +"\n#SBATCH --mem=10G\n#SBATCH --account="+str(project)+"\n#SBATCH -o "+str(outfolder)+"/SH/consensus_calling_%A_%a.output\n#SBATCH -e "+str(outfolder)+"/SH/consensus_calling_%A_%a.error \n#SBATCH --mail-type=END\n#SBATCH --mail-user="+str(mail)
                  +"\n#SBATCH --array=1-"+str(len(test))+"%8\n")
 write_file.write("sh "+str(outfolder)+"/SH/consensus_$SLURM_ARRAY_TASK_ID\_mapping.sh\n")
 write_file.close()
@@ -179,7 +179,7 @@ job_output=commands.getoutput("sbatch --depend="+str(job_id_merge)+" "+str(outfo
 """
 # cleanup
 write_file=open(str(outfolder)+"/SH/cleanup.sh","w")
-write_file.write("#!/bin/bash\n#SBATCH -t "+str(opt.timeslot)+"\n#SBATCH --mem=10G\n#SBATCH -o "+str(outfolder)+"/SH/cleanup.output\n#SBATCH -e "+str(outfolder)+"/SH/cleanup.error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-type=END\n#SBATCH --mail-user="+str(mail)+"\n")
+write_file.write("#!/bin/bash\n#SBATCH --export=NONE\n#SBATCH -t "+str(opt.timeslot)+"\n#SBATCH --mem=10G\n#SBATCH -o "+str(outfolder)+"/SH/cleanup.output\n#SBATCH -e "+str(outfolder)+"/SH/cleanup.error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-type=END\n#SBATCH --mail-user="+str(mail)+"\n")
 write_file.write("mv "+str(outfolder)+"/*sh* SH\n")
 write_file.close()
 os.system("sbatch -c 2 --depend="+str(job_id_consensus)+" "+str(outfolder)+"/SH/cleanup.sh")
