@@ -9,6 +9,7 @@ if __name__ == "__main__":
         group.add_option("-k", dest="target_key", metavar="[PATH]", help="target_key [e.g. TP53]")
         group.add_option("-v", dest="target_value", metavar="[PATH]", help="value_key [e.g. 17:7565097-7590856]")
         group.add_option("-r", default="yes", dest="cosmic", help="calculate COSMIC position TP53 yes/no [default= yes]")
+        group.add_option("-b", dest="blacklist", help="blacklist of reads that should be excluded for basecalling")
         parser.add_option_group(group)
         (opt, args) = parser.parse_args()
 
@@ -24,9 +25,32 @@ cosmic= "/hpc/compgen/tools/Cyclomics_consensus_pipeline/data_files/COSMIC_mutat
 
 for f in os.listdir(cwd):
     if f.endswith((".sorted.bam")):
+        if opt.blacklist:
+            f="{0}_bl.bam".format(str(f)[0:-4])
+ 
         for item in dic:
-            action = str(sambamba)+" depth base -L "+str(dic[item])+ " --min-coverage=0 " + str(f) + " > "+ str(f).replace('.sorted.bam','_sambamba_output_'+str(item)+'.txt')
+            if opt.blacklist:
+                new_file=str(f).replace('.sorted_bl.bam','_sambamba_output_bl_'+str(item)+'.txt')
+            else:
+                new_file=str(f).replace('.sorted.bam','_sambamba_output_'+str(item)+'.txt')
+
+            action = "{0} depth base -L {1} --min-coverage=0 {2} > {3} ".format(
+                sambamba,
+                str(dic[item]),
+                str(f),
+                new_file
+            )
             os.system(action)
         if opt.cosmic=="yes":
-            action = str(sambamba)+" depth base -L "+str(cosmic)+ " --min-coverage=0 " + str(f) + " > "+ str(f).replace('.sorted.bam','_sambamba_output_cosmic.txt')
+            if opt.blacklist:
+                new_file=str(f).replace('.sorted_bl.bam','_sambamba_output_bl_cosmic.txt')
+            else:
+                new_file=str(f).replace('.sorted.bam','_sambamba_output_cosmic.txt')
+
+            action = "{0} depth base -L {1} --min-coverage=0 {2} > {3} ".format(
+                sambamba,
+                str(cosmic),
+                str(f),
+                new_file
+            )
             os.system(action)
