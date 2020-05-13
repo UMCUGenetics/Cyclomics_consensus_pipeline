@@ -7,19 +7,21 @@ from optparse import OptionGroup
 if __name__ == "__main__":
         parser = OptionParser();
         group = OptionGroup(parser, "Main options")
-        group.add_option("-i", dest="wkdir", metavar="[PATH]", help="full path to BAM input folder [default = ./")
-        group.add_option("-o", dest="outdir", metavar="[PATH]", help="full path to output folder [default = ./")
-        group.add_option("-b", default="/hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa", dest="bwa", metavar="[PATH]", help="full path to bwa binary [default = /hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa ]")
-        group.add_option("-g", dest="gene", metavar="[STRING]", help="gene of interest [default = TP53")
-        group.add_option("--sa", default="/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba", dest="sambamba", metavar="[PATH]", help="full path to sambamba binary [default = /hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba]")
-        group.add_option("--b5", default="/hpc/compgen/tools/bam2m5/bam2m5.py", dest="bam2m5", metavar="[PATH]", help="full path to bam2m5 binary [default = /hpc/compgen/tools/bam2m5/bam2m5.py]")
-        group.add_option("--rf", default="/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest="refgenome_full", metavar="[PATH]", help="full path to complete reference genome [default = /hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
+        group.add_option("-i", dest = "wkdir", metavar = "[PATH]", help = "full path to BAM input folder [default = ./")
+        group.add_option("-o", dest = "outdir", metavar = "[PATH]", help = "full path to output folder [default = ./")
+        group.add_option("-b", default = "/hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa", dest = "bwa", metavar = "[PATH]", help = "full path to bwa binary [default = /hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa ]")
+        group.add_option("-g", dest = "gene", metavar = "[STRING]", help = "gene of interest [default = TP53")
+        group.add_option("--mp", default = 50, dest = "minperc", metavar = "[FLOAT]", help = "minimum percentage of forward or reverse reads required to include in forward or reverse bin [default = 50")
+        group.add_option("--sa", default = "/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba", dest = "sambamba", metavar = "[PATH]", help = "full path to sambamba binary [default = /hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba]")
+        group.add_option("--b5", default = "/hpc/compgen/tools/bam2m5/bam2m5.py", dest = "bam2m5", metavar = "[PATH]", help = "full path to bam2m5 binary [default = /hpc/compgen/tools/bam2m5/bam2m5.py]")
+        group.add_option("--rf", default = "/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest = "refgenome_full", metavar = "[PATH]", help = "full path to complete reference genome [default = /hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
         parser.add_option_group(group)
         (opt, args) = parser.parse_args()
 
 
-infolder=opt.wkdir # should be folder with sorted.bam
-outfolder= opt.outdir
+infolder = opt.wkdir # should be folder with sorted.bam
+outfolder = opt.outdir
+minperc = float(opt.minperc)
 
 if outfolder.endswith('/'): # chop last "/" if present
     outfolder=outfolder[0:-1]
@@ -60,25 +62,43 @@ for folder in os.listdir(infolder):
                     break
                 os.system("tar -axf "+str(tarfile)+ " "+ str(f))
                 in_file=pysam.AlignmentFile(str(outfolder)+"/"+str(f), "rb")
-                forward=0
-                reverse=0
+                forward = 0
+                reverse = 0
+                total = 0
                 for line in in_file:
                     if str(gene) in line.reference_name:
                         if line.flag == 16:
-                            reverse+=1
+                            reverse += 1
                         else:
-                            forward+=1
+                            forward += 1
+                        total += 1
                 os.system("rm "+ str(outfolder)+"/"+str(f))
                 conf= f[0:-11]+str(".consensus")
                 tarfilec = str(infolder.replace("bam", "consensus"))+"/"+str(folder)+"/"+str(folder).split("/")[-1]+".tar"
-                if reverse>forward:
-                    os.system("tar -axf "+str(tarfilec)+ " "+ str(conf) + " -O >> "+ str(outfolder.split("/")[-1])+"_reverse.fasta")
-                elif forward>reverse:
-                    os.system("tar -axf "+str(tarfilec)+ " "+ str(conf) + " -O >> "+ str(outfolder.split("/")[-1])+"_forward.fasta")
-                else:
-                    pass # discard all reads that are 50/50 f/r      
 
+                count_rev_org=0
+                count_for_org=0
+                count_rev_new=0
+                count_for_new=0
 
+                if reverse > forward:
+                    count_rev_org += 1
+                elif forward > reverse:
+                    count_for_org += 1
+
+                if total > 0: 
+                    rev_readperc = (float(reverse)/float(total))*100
+                    for_readperc = (float(forward)/float(total))*100
+                    if rev_readperc > minperc:
+                        os.system("tar -axf "+str(tarfilec)+ " "+ str(conf) + " -O >> "+ str(outfolder.split("/")[-1])+"_reverse.fasta")
+                        count_rev_new += 1
+                    elif for_readperc > minperc:
+                        os.system("tar -axf "+str(tarfilec)+ " "+ str(conf) + " -O >> "+ str(outfolder.split("/")[-1])+"_forward.fasta")
+                        count_for_new += 1
+                    else:
+                        pass # discard reads      
+                print "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}".format(f, reverse, forward, count_rev_new, count_for_new, rev_readperc, for_readperc)
+     
 for item in l:
     os.system (str(bwa) + "\"@RG\\tID:"+str(item)+"\\tSM:"+(sample)+"\\tPL:NANOPORE\\tLB:"+str(sample)+"\" "+str(refgenome_full)+" "+str(outfolder.split("/")[-1])+"_"+str(item)+".fasta | "+str(sambamba)+ " view -S -f bam /dev/stdin | "+ str(sambamba)+ " sort -t 2 --tmpdir=./tmp /dev/stdin -o "+str(outfolder.split("/")[-1])+"_"+str(item)+ ".sorted.bam")
     os.system("rm "+str(outfolder.split("/")[-1])+"_"+str(item)+".fasta")
