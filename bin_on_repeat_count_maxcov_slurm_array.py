@@ -148,7 +148,7 @@ test=[]
 def write_new_file(x,test):
     runid="consensus_"+str(x)
     write_file=open(str(outfolder)+"/SH/"+str(runid)+"_mapping.sh","w")
-    write_file.write("#!/bin/bash\n#SBATCH -t "+str(opt.timeslot)+"\n#SBATCH --account="+str(project)+"\n#SBATCH --mem=10G\n#SBATCH --export=NONE\n#SBATCH -o "+str(outfolder)+"/SH/"+str(runid)+".output\n#SBATCH -e "+str(runid)+"/SH/"+str(folder)+".error \n#SBATCH --mail-user="+str(mail)+"\n")
+    write_file.write("#!/bin/bash\n#SBATCH -t "+str(opt.timeslot)+"\n#SBATCH --account="+str(project)+"\n#SBATCH --mem=10G\n#SBATCH --export=NONE\n#SBATCH -o "+str(outfolder)+"/SH/"+str(runid)+".output\n#SBATCH -e "+ str(outfolder)+"/SH/"+str(runid)+".error \n#SBATCH --mail-user="+str(mail)+"\n")
     write_file.write(bwa + " mem -t "+str(opt.threads)+" -c 100 -M -R \"@RG\\tID:"+runid+"\\tSM:"+runid+"\\tPL:NANOPORE\\tLB:"+runid+"\" "+refgenome_full+" "+str(outfolder)+"//bin_consensus/"+runid+".fasta > "+str(outfolder)+"/"+runid+"_full_consensus.sam\n")
     write_file.write(sambamba+ " view -S -f bam "+str(outfolder)+"/" +runid+"_full_consensus.sam > "+str(outfolder)+"/"+runid+"_full_consensus.bam\n")
     write_file.write(sambamba+ " sort -t "+str(opt.threads)+" --tmpdir=./tmp"+" "+str(outfolder)+"/"+runid+"_full_consensus.bam -o "+str(outfolder)+"/"+runid+"_full_consensus.sorted.bam\n")
