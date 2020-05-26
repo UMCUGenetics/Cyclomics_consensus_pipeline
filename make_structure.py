@@ -2,9 +2,10 @@
 import sys, os, re
 from optparse import OptionParser, OptionGroup
 import glob
-import commands
+import subprocess
 import pysam
 import numpy as np
+import settings
 
 class Segment:
 	def __init__( self, id, qname, flag, rname, pos, mapq, length ):
@@ -50,10 +51,10 @@ if __name__ == "__main__":
     parser = OptionParser()
     group = OptionGroup(parser, "Main options")
     group.add_option("-i", default="./", dest="wkdir", help="full path to folder with BAM files [default = ./")
-    group.add_option("-o", default=100, dest="overlap", help="overlap in bp to determine if insert fragements are from the same molecule/amplicon [default=100bp]") 
-    group.add_option("-f", default=30, dest="flank", help="flank to determine unmapped regions to either BB or I [default=30]")
-    group.add_option("-m", default=100, dest="mad_threshold", help=" if mad score for insert startsite is more than threshold, report threshold [default=100]")
-    group.add_option("-r", default="17:7565097-7590856", dest="interval", help="interval region of interest chr:start-stop [TP53 default = 17:7565097-7590856] ")
+    group.add_option("-o", default=settings.STRUCTURE_OVERLAP, dest="overlap", help="overlap in bp to determine if insert fragements are from the same molecule/amplicon [default STRUCTURE_OVERLAP in settings.py]") 
+    group.add_option("-f", default=settings.STRUCTURE_FLANK, dest="flank", help="flank to determine unmapped regions to either BB or I [default STRUCTURE_FLANK in settings.py")
+    group.add_option("-m", default=settings.STRUCTURE_MAD, dest="mad_threshold", help=" if mad score for insert startsite is more than threshold, report threshold [default STRUCTURE_MAD in settings.py]")
+    group.add_option("-r", default=settings.STRUCTURE_INTARGET, dest="interval", help="interval region of interest chr:start-stop [default STRUCTURE_INTARGET in settings.py] ")
     parser.add_option_group(group)
     (opt, args) = parser.parse_args()
 
@@ -63,11 +64,11 @@ region=re.split("[:-]", opt.interval)
 wkdir=opt.wkdir
 mad_threshold=float(opt.mad_threshold)
 
-print "ReadName\treadStructure\tMADinsert\tInsertCount\tDifInserts\tBackboneCount\tDifBackbone\tB\tI\tBI\tMeanBaseQualityMappedRead"
-for subfolder in commands.getoutput("find "+str(wkdir)+ " -mindepth 1 -type d -iname \"*\"").split(): 
+print("ReadName\treadStructure\tMADinsert\tInsertCount\tDifInserts\tBackboneCount\tDifBackbone\tB\tI\tBI\tMeanBaseQualityMappedRead")
+for subfolder in subprocess.getoutput("find "+str(wkdir)+ " -mindepth 1 -type d -iname \"*\"").split(): 
     tarfile = str(subfolder)+"/"+str(subfolder).split("/")[-1]+".tar"
     if  os.path.isfile(tarfile):
-        files=commands.getoutput("tar -tf "+str(tarfile)).split()
+        files = subprocess.getoutput("tar -tf "+str(tarfile)).split()
         for f in files:
             if "bai" not in f:
                 os.system("tar -axf "+str(tarfile)+ " "+ str(f))
@@ -78,7 +79,7 @@ for subfolder in commands.getoutput("find "+str(wkdir)+ " -mindepth 1 -type d -i
                 quality=[0]
                 startlist=[]
                 for line in bamfile: ## parse BAM file 
-                    ## determine hardclip start and end, mapped length, original length
+                    """Determine hardclip start and end, mapped length, original length"""
                     length= line.query_length  	## length in FASTQ
                     length_mapped= line.reference_length ## mapped length
                     if line.flag & 16:
@@ -219,5 +220,5 @@ for subfolder in commands.getoutput("find "+str(wkdir)+ " -mindepth 1 -type d -i
                     printline+=str("%.2f" % (meanq))
                 except:
                     printline+="nan"
-                print printline
+                print(printline)
                 os.system("rm "+ str(f)) 
