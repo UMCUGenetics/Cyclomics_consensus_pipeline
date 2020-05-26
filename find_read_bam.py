@@ -1,12 +1,11 @@
 #! /usr/bin/env python
-import sys, os, re
-import commands
+import subprocess
 
-files= commands.getoutput("find ./ -iname \"*tar\"").split()
+files= subprocess.getoutput("find ./ -iname \"*tar\"").split()
 for f in files:
-    l= commands.getoutput("tar -tf "+str(f)).split()
+    l= subprocess.getoutput("tar -tf "+str(f)).split()
     for item in l:
         if "bai" not in item: 
-            print f,item
+            print(f,item)
 
 
