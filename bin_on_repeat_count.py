@@ -1,27 +1,32 @@
 #! /usr/bin/env python
-import sys, os,re, commands
+import sys
+import os
+import re
+import subprocess
 from optparse import OptionParser
 from optparse import OptionGroup
+import settings
 
 if __name__ == "__main__":
         parser = OptionParser();
         group = OptionGroup(parser, "Main options")
-        group.add_option("--im", dest="m5dir", metavar="[PATH]", help="full path to  m5 folder [default = ./]")
-        group.add_option("--ib", dest="bamdir", metavar="[PATH]", help="full path to  bam folder [default = ./]")
-        group.add_option("-o", dest="outdir", metavar="[PATH]", help="full path to output folder [default = ./")
-        group.add_option("-p", default="/hpc/compgen/tools/pbdagcon/src/cpp/pbdagcon", dest="pbdagcon", metavar="[PATH]", help="full path to pbgadcon binary [default = /hpc/compgen/tools/pbdagcon/src/cpp/pbdagcon]")
-        group.add_option("--param", default=" -c 1 -t 0 -j 2 ", dest="param", metavar="[STRING]", help="pbdagcon paramteres [default =  -c 2 -t 0 -j 2 ]")
-        group.add_option("--sa", default="/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba", dest="sambamba", metavar="[PATH]", help="full path to sambamba binary [default = /hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba]")
-        group.add_option("-b", default="/hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa", dest="bwa", metavar="[PATH]", help="full path to bwa binary [default = /hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa ]")
-        group.add_option("--rf", default="/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta", dest="refgenome_full", metavar="[PATH]", help="full path to complete reference genome [default = /hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta]")
-        group.add_option("--project", default="compgen", dest="project", metavar="STRING", help="SGE project for submitting jobs [default compgen]")
-        group.add_option("-m", default="m.elferink@umcutrecht.nl", dest="mail", metavar="[STRING]", help="email used for job submitting [default = m.elferink@umcutrecht.nl]")
-        group.add_option("-a", default="TP53", dest="insert", metavar="[STRING]", help="name of insert chromosome [default = TP53]")
-        group.add_option("-t", default="4:00:00", dest="timeslot", metavar="[TIME]", help="time slot for jobs [default = 4:00:00]")
-        group.add_option("--maxfiles", dest="maxfiles", metavar="[INT]", help="maximum number of files to be processed [default = all]")
-	group.add_option("--mem", default=32, dest="max_mem", metavar="[INT]", help="memory used for jobs [default = 32]")
-	group.add_option("--threads", default=4, dest="threads", metavar="[INT]", help="number threads used for jobs [default = 4]")
-        group.add_option("--cl", default=35, dest="cons_len", metavar="INT", help="minimum length (bp) for consensus calling [default 35]")
+        group.add_option("--im", dest = "m5dir", metavar = "[PATH]", help = "full path to  m5 folder [default = ./]")
+        group.add_option("--ib", dest = "bamdir", metavar = "[PATH]", help = "full path to  bam folder [default = ./]")
+        group.add_option("-o", dest = "outdir", metavar  ="[PATH]", help = "full path to output folder [default = ./")
+        group.add_option("-p", default = settings.pbdagcon, dest = "pbdagcon", metavar = "[PATH]", help = "full path to pbgadcon binary [default pbdagcon in settings.py]")
+        group.add_option("--param", default = settings.PBDAGCON_PARAM, dest = "param", metavar = "[STRING]", help = "pbdagcon parameters [default PBDAGCON_PARAM in settings.py]")
+        group.add_option("--sa", default = settings.sambamba, dest = "sambamba", metavar = "[PATH]", help = "full path to sambamba binary [default sambamba in settings.py]")
+        group.add_option("-b", default = settings.bwa, dest = "bwa", metavar = "[PATH]", help = "full path to bwa binary [default bwa in settings.py]")
+        group.add_option("--rf", default = settings.full_ref, dest = "refgenome_full", metavar = "[PATH]", help = "full path to complete reference genome [default full_ref in settings.py]")
+        group.add_option("--project", default = settings.project, dest = "project", metavar = "STRING", help = "SGE project for submitting jobs [default project in settings.py]")
+        group.add_option("-m", default = settings.mail, dest = "mail", metavar = "[STRING]", help = "email used for job submitting [default mail in settings.py]")
+        group.add_option("-a", default = settings.INSERT, dest = "insert", metavar = "[STRING]", help = "name of insert chromosome [default INSERT in settings.py]")
+        group.add_option("-t", default = settings.SLURM_JOB_TIME, dest = "timeslot", metavar = "[TIME]", help = "time slot for jobs [default SLURM_JOB_TIME in settings.py]")
+        group.add_option("--maxfiles", dest = "maxfiles", metavar = "[INT]", help = "maximum number of files to be processed [default = all]")
+        group.add_option("--mem_full", default = settings.MAX_MEM_FULL, dest = "max_mem_full", metavar = "[INT]", help = "memory used for jobs [default MAX_MEM_FULL in settings.py]")
+        group.add_option("--mem_target", default = settings.MAX_MEM_TARGET, dest = "max_mem_target", metavar = "[INT]", help = "memory used for jobs [default MAX_MEM_TARGET in settings.py]")
+        group.add_option("--threads", default = settings.THREADS, dest = "threads", metavar = "[INT]", help = "number threads used for jobs [default THREADS in settings.py]")
+        group.add_option("--cl", default = settings.MIN_CONS_LEN, dest = "cons_len", metavar = "INT", help = "minimum length (bp) for consensus calling [default MIN_CONS_LEN in settings.py]")
         parser.add_option_group(group)
         (opt, args) = parser.parse_args()
 
@@ -73,7 +78,7 @@ for folder in folders:
     if os.path.isfile(str(bamfolder) + "/" + str(folder) + "/" + str(folder).split("/")[-1] + ".tar"):
         bamtarfile = str(bamfolder) + "/" + str(folder) + "/" + str(folder).split("/")[-1] + ".tar"
         m5tarfile = str(m5folder) + "/" + str(folder) + "/" + str(folder).split("/")[-1] + ".tar"
-        files=commands.getoutput("tar -tf " + str(bamtarfile)).split()
+        files=subprocess.getoutput("tar -tf " + str(bamtarfile)).split()
         output_file=str(outfolder) + "/SH/Make_fasta_" + str(countfolder)
         if os.path.isfile(str(output_file) + ".sh"):
             test += [str(outfolder) + "/SH/Make_fasta_" + str(countfolder) + ".sh"]
@@ -85,7 +90,7 @@ for folder in folders:
             insert_count=0
             if "bai" not in str(f):
                 os.system("tar -axf " + str(bamtarfile) + " " + str(f) + "*")
-                insert_count=commands.getoutput(str(sambamba) + " depth base -L " + str(insert) +  " " + str(f) + "| cut -f3| sort -nk1 | tail -n1").split("\n")  #Last value is highest coverage.
+                insert_count=subprocess.getoutput(str(sambamba) + " depth base -L " + str(insert) +  " " + str(f) + "| cut -f3| sort -nk1 | tail -n1").split("\n")  #Last value is highest coverage.
                 if len(insert_count)> 1 and "failed" not in str(insert_count):
                     if "COV" not in insert_count[1]:
                         insert_count=insert_count[1]
@@ -98,7 +103,7 @@ for folder in folders:
                 if int(insert_count) >= 40:
                     write_file.write("tar -axf " + str(m5tarfile) + " " + str(f[0:-11]) + "* -O | " + str(pbdagcon) + " - " + param + " | sed 's/>/>" + str(f[0:-10]) + "_" + "/g' 1>> " + str(outfolder) + "/bin_consensus_folder/" + str(folder) + "_consensus_40.fasta\n")
                 elif int(insert_count) > 0 and int(insert_count) <40:
-                    for x in xrange(1, 40):
+                    for x in range(1, 40):
                         if int(insert_count) == x:
                             write_file.write("tar -axf " + str(m5tarfile) + " " + str(f[0:-11]) + "* -O | " + str(pbdagcon) + " - " + param + " | sed 's/>/>" + str(f[0:-10]) + "_" + "/g' 1>> " + str(outfolder) + "/bin_consensus_folder/" + str(folder) + "_consensus_" + str(x) + ".fasta\n")
 
@@ -125,17 +130,17 @@ for item in folder_dic:
                      + "\n#SBATCH --array=0-" + str(int(folder_dic[folder])-1) + "%4\n")
     write_file.write("sh " + str(outfolder) + "/SH/" + str(item) + "_$SLURM_ARRAY_TASK_ID\.sh\n")
     write_file.close()
-    job_output=commands.getoutput("sbatch " + str(outfolder) + "/SH/" + str(item) + "_array.sh")
+    job_output=subprocess.getoutput("sbatch " + str(outfolder) + "/SH/" + str(item) + "_array.sh")
     job_id_make_fasta = job_output.split()[3]
 
 write_file=open(str(outfolder)+"/SH/merge_fasta.sh","w")
 write_file.write("#!/bin/bash\n#SBATCH -t " + str(opt.timeslot) + "\n#SBATCH --mem=10G\n#SBATCH --account=" + str(project) + "\n#SBATCH -o " + str(outfolder) + "/SH/" + str(folder) + ".output\n#SBATCH -e " + str(outfolder) + "/SH/" + str(folder) + ".error \n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user=" + str(mail) + "\n")
-for x in xrange(1, 41):
+for x in range(1, 41):
     write_file.write("find " + str(outfolder) + "/bin_consensus_folder/ -iname \"*_consensus_" + str(x) + ".fasta\" -exec cat {} \; >> " + str(outfolder) + "/bin_consensus/consensus_" + str(x) + ".fasta\n")
 write_file.close()
 if len(job_id) >500:	## this will set the maximum hold jobs to 500 (max HPC slurm is 1000)
     job_id=job_id[-500:]
-job_output=commands.getoutput("sbatch -c 2 --depend=" + str(job_id_make_fasta) + " " + str(outfolder) + "/SH/merge_fasta.sh")
+job_output=subprocess.getoutput("sbatch -c 2 --depend=" + str(job_id_make_fasta) + " " + str(outfolder) + "/SH/merge_fasta.sh")
 job_id_merge=job_output.split()[3]
 
 test=[]
@@ -157,7 +162,7 @@ def write_new_file(x,test):
     test += [str(outfolder) + "/SH/" + str(runid) + "_mapping.sh"] 
     return test
 
-for x in xrange(1, 41):
+for x in range(1, 41):
     job_id=write_new_file(x,job_id)
     test=write_new_file(x,test)
 
@@ -167,4 +172,4 @@ write_file.write("#!/bin/bash\n#SBATCH --export=NONE\n#SBATCH -t " + str(opt.tim
                  + "\n#SBATCH --array=1-" + str(len(test)) + "%8\n")
 write_file.write("sh " + str(outfolder) + "/SH/consensus_$SLURM_ARRAY_TASK_ID\_mapping.sh\n")
 write_file.close()
-job_output=commands.getoutput("sbatch --depend=" + str(job_id_merge) + " " + str(outfolder) + "/SH/consensus_calling_array.sh")
+job_output=subprocess.getoutput("sbatch --depend=" + str(job_id_merge) + " " + str(outfolder) + "/SH/consensus_calling_array.sh")
