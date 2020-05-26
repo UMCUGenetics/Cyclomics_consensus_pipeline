@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-import sys, os,re, commands
+import os
 from optparse import OptionParser
 from optparse import OptionGroup
 
