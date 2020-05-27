@@ -17,7 +17,7 @@ if __name__ == "__main__":
     group.add_option("-b", dest = "blacklist", metavar = "[PATH]", help = "full path to blacklist file [default = off]")
     group.add_option("-c", default = settings.DAGCON_MIN_COV, dest = "coverage", metavar = "[INT]", help = "minimum coverage required for assembly [default = pgdagcon_coverage in settings.py]")
     group.add_option("-m", default = settings.mail, dest = "mail", metavar = "[STRING]", help = "email used for job submitting [default mail in settings.py]")
-    group.add_option("-t", default = settings.SLURM_JOB_TIME, dest = "timeslot", metavar = "[TIME]", help = "time slot for jobs [deafult SLURM_JOBTIME in settings.py]")
+    group.add_option("-t", default = settings.SLURM_JOB_TIME_LOW, dest = "timeslot", metavar = "[TIME]", help = "time slot for jobs [deafult SLURM_JOBTIME in settings.py]")
     group.add_option("-n", default = settings.MAX_READS_JOB, dest = "number", metavar="[INT]", help = "max number of reads within a scatterjob [default MAX_READS_JOB in settings.py]")
     group.add_option("-p", dest = "prefix", metavar = "[STRING]", help = "prefix of BAM names [default = off (FASTQ input folder name)]")
     group.add_option("-s", default = settings.SLURM_PARALLEL_JOBS, dest = "slurm_job", metavar="[INT]", help = "number of parallel slurm [default SLURM_PARALLEL_JOPS in settings.py]")
