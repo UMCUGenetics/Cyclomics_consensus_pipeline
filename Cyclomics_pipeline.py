@@ -16,7 +16,6 @@ parser_slurm.add_argument('insert_locus', help='Insert locus (e.g. TP53)')
 parser_slurm.add_argument('backbone_locus', help='Backbone locus (e.g. BB25)')
 parser_slurm.add_argument('--insert_targetinterval', default="TP53:1-27760", help='Target locus interval for structure file [default =TP53:1-27760]')
 args = parser.parse_args()
-args.func(args)
 
 
 """Default consensus calling"""
