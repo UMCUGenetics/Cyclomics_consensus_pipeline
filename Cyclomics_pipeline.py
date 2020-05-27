@@ -119,32 +119,32 @@ print("Submitted repeat analysis backbone\n",action,jobid_repeat_backbone)
 
 
 """Count alleles """
-if not os.path.isdir("{output_folder}/SH/".format(output_folder=args.output_folder)):
-    os.system("mkdir {output_folder}/SH/".format(output_folder=args.output_folder))
+if not os.path.isdir("{output_folder}/jobs/".format(output_folder=args.output_folder)):
+    os.system("mkdir {output_folder}/jobs/".format(output_folder=args.output_folder))
 
-write_file=open(str(args.output_folder) + "/SH/Count_alleles.sh","w")
-write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/SH/Count_alleles.output\n#SBATCH -e {output_folder}/SH/Count_alleles.error \n#SBATCH --mail-user={mail}\n".format(
+write_file=open(str(args.output_folder) + "/jobs/Count_alleles.sh","w")
+write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/jobs/Count_alleles.output\n#SBATCH -e {output_folder}/jobs/Count_alleles.error \n#SBATCH --mail-user={mail}\n".format(
     timeslot=settings.SLURM_JOB_TIME_LOW,
     project=settings.project,
     mem=settings.MAX_MEM_TARGET,
     output_folder=args.output_folder,
     mail=settings.mail
 ))
-write_file.write("source {venv}".format(venv=settings.venv))
-write_file.write("cd {output_folder}".format(output_folder=args.output_folder))
+write_file.write("source {venv}\n".format(venv=settings.venv))
+write_file.write("cd {output_folder}\n".format(output_folder=args.output_folder))
+write_file.write("{calculate}\n".format(calculate=settings.calculate))
+write_file.write("cd {output_folder}/for_rev_split_backbone/\n".format(output_folder=args.output_folder))
+write_file.write("{calculate}\n".format(calculate=settings.calculate))
+write_file.write("cd {output_folder}/for_rev_split_insert/\n".format(output_folder=args.output_folder))
+write_file.write("{calculate}\n".format(calculate=settings.calculate))
+write_file.write("cd {output_folder}/split_insert/bin_consensus/\n".format(output_folder=args.output_folder))
 write_file.write("{calculate}".format(calculate=settings.calculate))
-write_file.write("cd {output_folder}/for_rev_split_backbone/".format(output_folder=args.output_folder))
-write_file.write("{calculate}".format(calculate=settings.calculate))
-write_file.write("cd {output_folder}/for_rev_split_insert/".format(output_folder=args.output_folder))
-write_file.write("{calculate}".format(calculate=settings.calculate))
-write_file.write("cd {output_folder}/split_insert/bin_consensus/".format(output_folder=args.output_folder))
-write_file.write("{calculate}".format(calculate=settings.calculate))
-write_file.write("rm {output_folder}/split_insert/bin_consensus_folder/".format(output_folder=args.output_folder))
-write_file.write("cd {output_folder}/split_backbone/bin_consensus/".format(output_folder=args.output_folder))
-write_file.write("{calculate}".format(calculate=settings.calculate))
-write_file.write("rm {output_folder}/split_backbone/bin_consensus_folder/".format(output_folder=args.output_folder))
+write_file.write("rm {output_folder}/split_insert/bin_consensus_folder/\n".format(output_folder=args.output_folder))
+write_file.write("cd {output_folder}/split_backbone/bin_consensus/\n".format(output_folder=args.output_folder))
+write_file.write("{calculate}\n".format(calculate=settings.calculate))
+write_file.write("rm {output_folder}/split_backbone/bin_consensus_folder/\n".format(output_folder=args.output_folder))
 write_file.close()
-os.system("sbatch --depend={default},{split_insert},{split_backbone},{repeat_insert},{repeat_backbone} {output_folder}/SH/Count_alleles.sh".format(
+os.system("sbatch --depend={default},{split_insert},{split_backbone},{repeat_insert},{repeat_backbone} {output_folder}/jobs/Count_alleles.sh".format(
     default=jobid_default,
     split_insert=jobid_split_insert,
     split_backbone=jobid_split_backbone,
@@ -156,30 +156,31 @@ print("Submitted count alleles\n")
 
 
 """ Make Structure file and plot """
-write_file=open(str(args.output_folder) + "/SH/Make_structure.sh","w")
-write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/SH/Count_alleles.output\n#SBATCH -e {output_folder}/SH/Count_alleles.error \n#SBATCH --mail-user={mail}\n".format(
+write_file=open(str(args.output_folder) + "/jobs/Make_structure.sh","w")
+write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/jobs/Count_alleles.output\n#SBATCH -e {output_folder}/jobs/Count_alleles.error \n#SBATCH --mail-user={mail}\n".format(
     timeslot = settings.SLURM_JOB_TIME_HIGH,
     project=settings.project,
     mem=settings.MAX_MEM_TARGET,
     output_folder=args.output_folder,
     mail=settings.mail,
 ))
-write_file.write("source {venv}".format(venv=settings.venv))
-write_file.write("mkdir {output_folder}/structure".format(output_folder=args.output_folder))
-write_file.write("cd {output_folder}/structure".format(output_folder=args.output_folder))
-write_file.write("{structure} -i {output_folder}/bam -o {overlap} i {insert_targetinterval} > structure.txt".format(
+write_file.write("source {venv}\n".format(venv=settings.venv))
+write_file.write("mkdir {output_folder}/structure\n".format(output_folder=args.output_folder))
+write_file.write("cd {output_folder}/structure\n".format(output_folder=args.output_folder))
+write_file.write("{structure} -i {output_folder}/bam -o {overlap} i {insert_targetinterval} > structure.txt\n".format(
     structure=settings.structure,
     output_folder=args.output_folder,
     overlap=settings.STRUCTURE_OVERLAP,
     insert_targetinterval=args.insert_targetinterval
 ))
-write_file.write("{rscript} {plot} structure.txt {number_reads}".format(
+write_file.write("{rscript} {plot} structure.txt {number_reads}\n".format(
     rscript=settings.rscript,
     plot=settings.plot_dashboard,
     number_reads=settings.MAX_READS_JOB_PLOT
 ))
 write_file.close()
-os.system("sbatch --depend={default} {output_folder}/SH/Make_structure.sh".format(
+
+os.system("sbatch --depend={default} {output_folder}/jobs/Make_structure.sh".format(
     default=jobid_default,
     output_folder=args.output_folder
 ))
@@ -187,27 +188,27 @@ print("Submitted structure file\n")
 
 
 """ Check numbers and make overview """
-write_file=open(str(args.output_folder) + "/SH/Check.sh","w")
-write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/SH/Count_alleles.output\n#SBATCH -e {output_folder}/SH/Count_alleles.error \n#SBATCH --mail-user={mail}\n".format(
+write_file=open(str(args.output_folder) + "/jobs/Check.sh","w")
+write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/jobs/Count_alleles.output\n#SBATCH -e {output_folder}/jobs/Count_alleles.error \n#SBATCH --mail-user={mail}\n".format(
     timeslot = settings.SLURM_JOB_TIME_MED,
     project=settings.project,
     mem=settings.MAX_MEM_TARGET,
     output_folder=args.output_folder,
     mail=settings.mail,
 ))
-write_file.write("source {venv}".format(venv=settings.venv))
-write_file.write("cd {output_folder}".format(output_folder=args.output_folder))
-write_file.write("{check_numbers} -r {input_folder} -p {output_folder} > check_numbers.txt ".format(
+write_file.write("source {venv}\n".format(venv=settings.venv))
+write_file.write("cd {output_folder}\n".format(output_folder=args.output_folder))
+write_file.write("{check_numbers} -r {input_folder} -p {output_folder} > check_numbers.txt\n".format(
     check_numbers=settings.check_numbers,
     input_folder=args.input_folder,
     output_folder=args.output_folder
 ))
-write_file.write("cd {output_folder}/bam".format(output_folder=args.output_folder))
-write_file.write("{find_read_bam}  > bam_locations.txt ".format(
+write_file.write("cd {output_folder}/bam\n".format(output_folder=args.output_folder))
+write_file.write("{find_read_bam}  > bam_locations.txt\n".format(
     find_read_bam=settings.find_read_bam
 ))
 write_file.close()
-os.system("sbatch --depend={default} {output_folder}/SH/Make_structure.sh".format(
+os.system("sbatch --depend={default} {output_folder}/jobs/Make_structure.sh".format(
     default=jobid_default,
     output_folder=args.output_folder
 ))
