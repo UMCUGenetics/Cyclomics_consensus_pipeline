@@ -8,11 +8,10 @@ bwa = "/hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa"
 sambamba = "/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba"
 bam2m5 = "/hpc/compgen/tools/bam2m5/bam2m5.py"
 pbdagcon = "/hpc/compgen/tools/pbdagcon/src/cpp/pbdagcon"
-last = "/hpc/compgen/tools/last-921/"  #Note that this is the folder. Folder should contain ./src/lastal, ./src/last-split, ./scripts/maf-convert, and ./last_params
-
-last_param = "/hpc/compgen/tools/development/DEV_Cyclomics_consensus_pipeline/last_params"
-#last_param = "/hpc/compgen/tools/development/DEV_Cyclomics_consensus_pipeline/Test_Last/flongle_DER4803.param"
-
+lastal = "/hpc/compgen/tools/last-921/src/lastal"
+lastsplit = "/hpc/compgen/tools/last-921/src/last-split"
+lastparam = "/hpc/compgen/tools/development/DEV_Cyclomics_consensus_pipeline/data_files/last_params"
+mafconvert = "/hpc/compgen/tools/last-921/scripts/maf-convert"
 full_ref = "/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta"
 target_ref = "/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/BRAF_TP53_EGFR_BB_pjet.fasta"
 
@@ -25,9 +24,13 @@ MAX_MEM_FULL  = 32
 THREADS = 2 
 MIN_CONS_LEN = 35
 TRIM = 0
+BWA_MEM = "{bwa} mem -t 2 -c 100 -M -R".format(bwa=bwa)
+
  
 #split_forward_reverse_reads.py
 SPLIT_MIN_PERC = 50 
+TRIM = 0
+STATES = ["forward","reverse"]
 
 #bin_on_repeat_count.py 
 INSERT = "TP53"
