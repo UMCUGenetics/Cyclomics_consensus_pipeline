@@ -33,7 +33,7 @@ if __name__ == "__main__":
                     out_bam.write(read)
             bamfile.close()
             out_bam.close()
-            os.system ("samtools index "+ str(f)[0:-4]+"_bl.bam")  
+            os.system ("samtools index " + str(f)[0:-4] + "_bl.bam")  
             os.system ("{samtools} index {output_id}".format(
                 samtools =  opt.samtools,
                 output_id = output_id
