@@ -6,8 +6,8 @@ import time
 import gzip
 from optparse import OptionParser
 from optparse import OptionGroup
-
 import settings
+
 
 if __name__ == "__main__":
     parser = OptionParser();
@@ -28,7 +28,12 @@ if __name__ == "__main__":
     group.add_option("--project", default = settings.project, dest = "project", metavar = "STRING", help = "SGE project for submitting jobs [default project in settings.py]")
     group.add_option("--bwa", default = settings.bwa, dest = "bwa", metavar = "[PATH]", help = "full path to bwa executable [default bwa in settings.py ]")
     group.add_option("--sa", default = settings.sambamba, dest = "sambamba", metavar = "[PATH]", help = "full path to sambamba executable [default sambamba in settings.py]")
-    group.add_option("--la", default = settings.last, dest = "lastal", metavar = "[PATH]", help = "full path to lastal folder [default last in settings.py]")
+
+    group.add_option("--la", default = settings.lastal, dest = "lastal", metavar = "[PATH]", help = "full path to lastal executable [default last in settings.py]")
+    group.add_option("--ls", default = settings.lastsplit, dest = "lastsplit", metavar = "[PATH]", help = "full path to last-split executable [default last in settings.py]")
+    group.add_option("--lp", default = settings.lastparam, dest = "lastparam", metavar = "[PATH]", help = "full path to last-param file [default last in settings.py]")
+    group.add_option("--maf", default = settings.mafconvert, dest = "mafconvert", metavar = "[PATH]", help = "full path to maf-convert executable [default last in settings.py]")
+
     group.add_option("-e", default = settings.venv, dest = "venv", metavar = "[ENV]", help = "full path to python enviroment [default venv in settings.py]")
     group.add_option("--b5", default = settings.bam2m5, dest = "bam2m5", metavar = "[PATH]", help = "full path to bam2m5 executable [default bam2m5 in settings.py]")
 
@@ -71,20 +76,6 @@ if __name__ == "__main__":
                 else:
                     #print("Warning, read found multiple times in blacklist {}".format(item.split()[1].split("_")[1]))
                     pass
-
-    coverage = opt.coverage
-    number = int(opt.number)
-    project = opt.project
-    timeslot = str(opt.timeslot)
-    max_mem_target = int(opt.max_mem_target)
-    max_mem_full = int(opt.max_mem_full)
-    threads = int(opt.threads)
-    cons_len = int(opt.cons_len)
-    lastal_src = str(opt.lastal) + "src/lastal"
-    #lastparam = str(opt.lastal) + "last_params"
-    lastparam = settings.last_param 
-    lastsplit = str(opt.lastal) + "src/last-split"
-    mafconvert = str(opt.lastal) + "scripts/maf-convert"
 
     """Log GIT version + commit of repository"""
     if str(sys.argv[0]) == "python":
@@ -139,12 +130,7 @@ if __name__ == "__main__":
                     line_dic[str(fastq_files)] += [{read_new:[fastqline + 1, fastqline + 4]}]
                 fastqline += 4
             else: # loop until next @ is found 
-                #print("Error ", fastq_files, fastqline)
                 fastqline += 1
-
-    #print("Fastq-file\tNumberOfReads")
-    #for item in line_dic:
-    #    print(item,len(line_dic[item]))
 
     total = 0
     subnumber = 0
@@ -167,7 +153,7 @@ if __name__ == "__main__":
         write_file.write("#!/bin/bash\n#SBATCH -t {time} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {outdir}/SH/{folder}_job_{subnumber}.output\n#SBATCH -e {outdir}/SH/{folder}_job_{subnumber}.error \n#SBATCH --mail-user={mail}\n".format(
             time=opt.timeslot ,
             project=opt.project,
-            mem=max_mem_target ,
+            mem=opt.max_mem_target ,
             outdir=outdir ,
             folder=folder, 
             subnumber=subnumber,
@@ -206,11 +192,11 @@ if __name__ == "__main__":
                         item=fastq_file,
                         pos0=position[0],
                         pos1=position[1],
-                        lastal=lastal_src,
-                        lastparam=lastparam,
+                        lastal=opt.lastal,
+                        lastparam=opt.lastparam,
                         refgenome_target_db=refgenome_target_db,
-                        lastsplit=lastsplit,
-                        mafconvert=mafconvert,
+                        lastsplit=opt.lastsplit,
+                        mafconvert=opt.mafconvert,
                         fastq=fastq,
                         sambamba=opt.sambamba,
                         outdir=outdir,
@@ -266,10 +252,10 @@ if __name__ == "__main__":
                     subnumber=subnumber,
                     fastq=fastq,
                     pbdagcon=opt.pbdagcon,
-                    cons_len=cons_len,
-                    coverage=coverage,
+                    cons_len=opt.cons_len,
+                    coverage=opt.coverage,
                     trim=trim,
-                    threads=threads
+                    threads=opt.threads
                     ))
                 write_file.write("sed -i \'s/>/>{fkey}_/g\' {outdir}/consensus/{folder}_{subnumber}/{fastq}.consensus\n".format(
                     fkey=list(f.keys())[0],
@@ -291,7 +277,7 @@ if __name__ == "__main__":
                     fastq=fastq
                     ))
 
-            if count == (number):
+            if count == (opt.number):
                 job_list += ["{0}/SH/Targetmapping_{1}.sh".format(outdir, subnumber)]
                 write_file.close()
                 subnumber += 1
@@ -325,7 +311,7 @@ if __name__ == "__main__":
             \n#SBATCH --mail-user={mail} \
             \n#SBATCH --array=0-{files}%{slurm}\n".format(
             timeslot=opt.timeslot,
-            mem=max_mem_target,
+            mem=opt.max_mem_target,
             outdir=outdir,
             project=opt.project,
             mail=opt.mail,
@@ -343,7 +329,7 @@ if __name__ == "__main__":
     write_file.write("#!/bin/bash\n#SBATCH -t {time} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {outdir}/SH/full_target_mapping.output\n#SBATCH -e {outdir}/SH/full_target_mapping.error \n#SBATCH --mail-user={mail}\n".format(
             time=opt.timeslot ,
             project=opt.project,
-            mem=max_mem_full ,
+            mem=opt.max_mem_full ,
             outdir=outdir ,
             mail=opt.mail
         ))
@@ -364,7 +350,7 @@ if __name__ == "__main__":
     write_file.write("cd {}/SH\n".format(outdir))
     write_file.write("zip -m SH.zip *\n")
     write_file.close()
-    
+
     #os.system("sbatch -c 2 --depend=" + str(job_id_make_fasta) + " {}/SH/full_target_mapping.sh".format(outdir))
     job_output=subprocess.getoutput("sbatch -c 2 --depend=" + str(job_id_make_fasta) + " {}/SH/full_target_mapping.sh".format(outdir))
     write_file = open("{}/SH/job_id_run_dagcon_consensus.sh".format(outdir), "w")
