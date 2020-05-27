@@ -17,14 +17,14 @@ number_reads = 100000 # must be less than total readcount
 mail = "m.elferink@umcutrecht.nl"
 venv = str(cwd) + "/venv/bin/activate"
 
-default = str(cwd) + "/slurm/run_dagcon_consensus.py"
-split = str(cwd) + "/slurm/split_forward_reverse_reads.py"
-repeat = str(cwd) + "/slurm/bin_on_repeat_count.py"
-calculate = str(cwd) + "/tools/calculate_depth.py"
-plot_dashboard = str(cwd) + "/tools/plot_Dashboard.R"
-check_numbers = str(cwd) + "/tools/check_numbers.py"
-find_read_bam = str(cwd) + "/tools/find_read_bam.py"
-structure = str(cwd) + "/tools/make_structure.py"
+default = str(cwd) + "/run_dagcon_consensus.py"
+split = str(cwd) + "/split_forward_reverse_reads.py"
+repeat = str(cwd) + "/bin_on_repeat_count.py"
+calculate = str(cwd) + "/calculate_depth.py"
+plot_dashboard = str(cwd) + "/plot_Dashboard.R"
+check_numbers = str(cwd) + "/check_numbers.py"
+find_read_bam = str(cwd) + "/find_read_bam.py"
+structure = str(cwd) + "/make_structure.py"
 
 rscript= "/hpc/local/CentOS7/common/lang/R/3.2.2/bin/Rscript"
 full_reference = "/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta"
@@ -51,8 +51,6 @@ os.system(action)
 jobid_default = open("{output_folder}/SH/job_id_run_dagcon_consensus.sh".format(output_folder=output_folder), "r").readline().strip()
 print("Submitted default consensus calling\n",action,jobid_default)
 
-########## jobid_default is finished before analysis! #######
-
 
 """ Forward and Reverse splitting """
 """ Insert """
@@ -73,7 +71,7 @@ action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {cores
 )
 jobid =subprocess.getoutput(action)
 jobid_split_insert = jobid.split()[3]
-print("Submitted forward revense split insert\n",action,jobid_split_insert)
+print("Submitted forward reverse split insert\n",action,jobid_split_insert)
 
 """ Backbone """
 os.system("mkdir {output_folder}/for_rev_split_backbone".format(output_folder=output_folder))
@@ -89,11 +87,11 @@ action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {cores
     split=split,
     output_folder=output_folder,
     full_reference=full_reference,
-    backbone_locus=insert_locus
+    backbone_locus=backbone_locus
 )
 jobid =subprocess.getoutput(action)
 jobid_split_backbone = jobid.split()[3]
-print("Submitted forward revense split backbone\n",action,jobid_split_backbone)
+print("Submitted forward reverse split backbone\n",action,jobid_split_backbone)
 
 
 """ Repeat count analysis """
@@ -139,7 +137,9 @@ print("Submitted repeat analysis backbone\n",action,jobid_repeat_backbone)
 
 
 """Count alleles """
-os.system("mkdir {output_folder}/SH/".format(output_folder=output_folder))
+if not os.path.isdir("{output_folder}/SH/".format(output_folder=output_folder)):
+    os.system("mkdir {output_folder}/SH/".format(output_folder=output_folder))
+
 write_file=open(str(output_folder) + "/SH/Count_alleles.sh","w")
 write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/SH/Count_alleles.output\n#SBATCH -e {output_folder}/SH/Count_alleles.error \n#SBATCH --mail-user={mail}\n".format(
     timeslot=timeslot1,
