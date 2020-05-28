@@ -166,7 +166,7 @@ if __name__ == "__main__":
         array_folder_id = "{outfolder}/SH/{folder}".format(outfolder=outfolder,folder=folder)
 
         write_file=open(out_file,"w")
-        write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n#SBATCH -o {array_folder_id}_%A_%a.output\n#SBATCH -e {array_folder_id}_%A_%a.error\n#SBATCH --array=0-{number}%4\n".format(
+        write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n#SBATCH -o {array_folder_id}_%A_%a.output\n#SBATCH -e {array_folder_id}_%A_%a.error\n#SBATCH --array=1-{number}%4\n".format(
                 timeslot=opt.timeslotmed,
                 mem=opt.max_mem_target,
                 project=opt.project,
@@ -250,7 +250,7 @@ if __name__ == "__main__":
 
     cons_file = "{outfolder}/SH/consensus_calling_array.sh".format(outfolder=outfolder) 
     write_file = open(cons_file,"w")
-    write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n#SBATCH -o {cons_file}_%A_%a.output\n#SBATCH -e {cons_file}_%A_%a.error\n#SBATCH --array=0-{number}%8\n".format(
+    write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n#SBATCH -o {cons_file}_%A_%a.output\n#SBATCH -e {cons_file}_%A_%a.error\n#SBATCH --array=1-{number}%8\n".format(
         timeslot=opt.timeslotmed,
         mem=opt.max_mem_target,
         project=opt.project,
