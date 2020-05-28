@@ -260,6 +260,6 @@ if __name__ == "__main__":
         number=len(test)
     )) 
 
-    write_file.write("sh {outfolder}/SH/consensus__$SLURM_ARRAY_TASK_ID\_mapping.sh\n".format(outfolder=outfolder)) 
+    write_file.write("sh {outfolder}/SH/consensus_$SLURM_ARRAY_TASK_ID\_mapping.sh\n".format(outfolder=outfolder)) 
     write_file.close()
     job_output=subprocess.getoutput("sbatch --depend={job_id_merge} {cons_file}".format(job_id_merge=job_id_merge, cons_file=cons_file))
