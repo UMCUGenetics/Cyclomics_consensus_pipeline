@@ -33,23 +33,16 @@ target_ref = "/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/BRAF_TP5
 
 
 #  General settings
-
-
-SLURM_JOB_TIME_LOW = "2:00:00"
-SLURM_JOB_TIME_MED = "4:00:00"
+SLURM_JOB_TIME_LOW = "2:00:00"		
+SLURM_JOB_TIME_MED = "4:00:00"		
 SLURM_JOB_TIME_HIGH = "196:00:00"
-
-
 MAX_MEM_TARGET = 10
 MAX_MEM_FULL  = 32 
 THREADS = 2 
 MIN_CONS_LEN = 35
 TRIM = 0
 BWA_MEM = "{bwa} mem -t 2 -c 100 -M -R".format(bwa=bwa)
-MAX_READS_JOB_PLOT = 100000
-
-
-
+MAX_READS_JOB_PLOT = 50000  #Note that this number must be lower tham the total reads in the analyses.
 
 #run_dagcon_consensus.py specific settings
 DAGCON_MIN_COV = 10
