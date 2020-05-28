@@ -21,7 +21,8 @@ if __name__ == "__main__":
     group.add_option("--project", default = settings.project, dest = "project", metavar = "STRING", help = "SGE project for submitting jobs [default project in settings.py]")
     group.add_option("-m", default = settings.mail, dest = "mail", metavar = "[STRING]", help = "email used for job submitting [default mail in settings.py]")
     group.add_option("-a", default = settings.INSERT, dest = "insert", metavar = "[STRING]", help = "name of insert chromosome [default INSERT in settings.py]")
-    group.add_option("-t", default = settings.SLURM_JOB_TIME, dest = "timeslot", metavar = "[TIME]", help = "time slot for jobs [default SLURM_JOB_TIME in settings.py]")
+    group.add_option("--tlow", default = settings.SLURM_JOB_TIME_LOW, dest = "timeslotlow", metavar = "[TIME]", help = "time slot for jobs [default SLURM_JOB_TIME in settings.py]")
+    group.add_option("--tmed", default = settings.SLURM_JOB_TIME_MED, dest = "timeslotmed", metavar = "[TIME]", help = "time slot for jobs [default SLURM_JOB_TIME in settings.py]")
     group.add_option("--maxfiles", dest = "maxfiles", metavar = "[INT]", help = "maximum number of files to be processed [default = all]")
     group.add_option("--mem_full", default = settings.MAX_MEM_FULL, dest = "max_mem_full", metavar = "[INT]", help = "memory used for jobs [default MAX_MEM_FULL in settings.py]")
     group.add_option("--mem_target", default = settings.MAX_MEM_TARGET, dest = "max_mem_target", metavar = "[INT]", help = "memory used for jobs [default MAX_MEM_TARGET in settings.py]")
@@ -95,7 +96,7 @@ if __name__ == "__main__":
                 continue
             write_file=open(output_file,"w")
             write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project}\n#SBATCH --mem={mem}G\n#SBATCH --export=NONE\n#SBATCH -o {output_id}.output -e {output_id}.error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user={mail}\n".format(
-                timeslot=opt.timeslot,
+                timeslot=opt.timeslotlow,
                 project=opt.project,
                 mem=opt.max_mem_target,
                 output_id=output_id,
@@ -166,7 +167,7 @@ if __name__ == "__main__":
 
         write_file=open(out_file,"w")
         write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n#SBATCH -o {array_folder_id}_%A_%a.output\n#SBATCH -e {array_folder_id}_%A_%a.error\n#SBATCH --array=0-{number}%4\n".format(
-                timeslot=opt.timeslot,
+                timeslot=opt.timeslotmed,
                 mem=opt.max_mem_target,
                 project=opt.project,
                 mail=opt.mail,
@@ -184,7 +185,7 @@ if __name__ == "__main__":
     merge_file = "{outfolder}/SH/merge_fasta.sh".format(outfolder=outfolder)
     write_file=open(merge_file,"w")
     write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --export=NONE\n#SBATCH --account={project}\n#SBATCH --mem={mem}G\n#SBATCH -o {merge_file}.output -e {merge_file}.error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user={mail}\n".format(
-        timeslot=opt.timeslot,
+        timeslot=opt.timeslotlow,
         project=opt.project,
         mem=opt.max_mem_target,
         merge_file=merge_file,
@@ -209,7 +210,7 @@ if __name__ == "__main__":
         map_file = "{outfolder}/SH/{runid}_mapping.sh".format(outfolder=outfolder,runid=runid)
         write_file=open(map_file,"w")
         write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --export=NONE\n#SBATCH --account={project}\n#SBATCH --mem={mem}G\n#SBATCH -o {map_file}.output -e {map_file}.error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user={mail}\n".format(
-            timeslot=opt.timeslot,
+            timeslot=opt.timeslotlow,
             project=opt.project,
             mem=opt.max_mem_target,
             map_file=map_file,
@@ -251,7 +252,7 @@ if __name__ == "__main__":
     write_file = open(cons_file,"w")
     write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n \
                      #SBATCH -o {cons_file}_%A_%a.output\n#SBATCH -e {cons_file}_%A_%a.error\n#SBATCH --array=0-{number}%8\n".format(
-        timeslot=opt.timeslot,
+        timeslot=opt.timeslotmed,
         mem=opt.max_mem_target,
         project=opt.project,
         mail=opt.mail,
