@@ -25,16 +25,16 @@ if __name__ == "__main__":
     else:
         sys.exit("provide folder to processed data" )
 
-    files = subprocess.getoutput("find {rawdir}  -iname \"*fastq\"".format(rawdir=rawdir).split()
+    files = subprocess.getoutput("find {rawdir}  -iname \"*fastq\"".format(rawdir=rawdir)).split()
     if len(files) == 0: ## likely that fastq are compressed
-        fastq = subprocess.getoutput("find {rawdir} -iname \"*fastq.gz\" -exec gunzip -cd {} \; | wc -l".format(rawdir=rawdir)
+        fastq = subprocess.getoutput("find {rawdir} -iname \"*fastq.gz\" -exec gunzip -cd {{}} \; | wc -l".format(rawdir=rawdir))
     else:
-        fastq = subprocess.getoutput("find {rawdir} -iname \"*fastq\" -exec cat {} \; | wc -l").format(rawdir=rawdir)
+        fastq = subprocess.getoutput("find {rawdir} -iname \"*fastq\" -exec cat {{}} \; | wc -l".format(rawdir=rawdir))
 
     reads = int(int(fastq)/4)
-    bams = subprocess.getoutput("find {prodir}/bam/ -iname \"*tar\" -exec tar -tf {} \; |grep bai | wc -l").format(prodir=prodir)
-    m5 = subprocess.getoutput("find  {prodir}/m5/ -iname \"*tar\" -exec tar -tf {} \; | wc -l").format(prodir=prodir)
-    consensus = subprocess.getoutput("find {prodir}/consensus/ -iname \"*tar\" -exec tar -tf {} \; | wc -l").format(prodir=prodir)
+    bams = subprocess.getoutput("find {prodir}/bam/ -iname \"*tar\" -exec tar -tf {{}} \; |grep bai | wc -l".format(prodir=prodir))
+    m5 = subprocess.getoutput("find  {prodir}/m5/ -iname \"*tar\" -exec tar -tf {{}} \; | wc -l".format(prodir=prodir))
+    consensus = subprocess.getoutput("find {prodir}/consensus/ -iname \"*tar\" -exec tar -tf {{}} \; | wc -l".format(prodir=prodir))
 
 
     print("reads in fastq file ", reads)
