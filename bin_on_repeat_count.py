@@ -192,8 +192,8 @@ if __name__ == "__main__":
         mail=opt.mail
     ))
 
-    for x in range(1, 40):
-         write_file.write("find {outfolder}/bin_consensus_folder/ -iname \"*_consensus_{x}.fasta\" -exec cat {{}} \; >> {outfolder}/bin_consensus/consensus_{x}.fasta".format(
+    for x in range(1, 41):
+         write_file.write("find {outfolder}/bin_consensus_folder/ -iname \"*_consensus_{x}.fasta\" -exec cat {{}} \; >> {outfolder}/bin_consensus/consensus_{x}.fasta\n".format(
              outfolder=outfolder,
              x=x
          ))
@@ -244,7 +244,7 @@ if __name__ == "__main__":
         test += [map_file]
         return test
 
-    for x in range(1, 40):
+    for x in range(1, 41):
         job_id = write_new_file(x, job_id)
         test = write_new_file(x, test)
 
