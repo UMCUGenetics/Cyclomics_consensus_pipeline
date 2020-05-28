@@ -15,6 +15,7 @@ parser_slurm.add_argument('prefix', help='Prefix (e.g. RunID/SampleID)')
 parser_slurm.add_argument('insert_locus', help='Insert locus (e.g. TP53)')
 parser_slurm.add_argument('backbone_locus', help='Backbone locus (e.g. BB25)')
 parser_slurm.add_argument('--insert_targetinterval', default="TP53:1-27760", help='Target locus interval for structure file [default =TP53:1-27760]')
+parser_slurm.add_argument('--structure_plot_max', default="settings.MAX_READS_JOB_PLOT", help='Maximum reads in structure file plotted [default MAX_READS_JOB_PLOT in settings.py ]')
 args = parser.parse_args()
 
 
@@ -177,7 +178,7 @@ write_file.write("{structure} -i {output_folder}/bam -o {overlap} i {insert_targ
 write_file.write("{rscript} {plot} structure.txt {number_reads}\n".format(
     rscript=settings.rscript,
     plot=settings.plot_dashboard,
-    number_reads=settings.MAX_READS_JOB_PLOT
+    number_reads=args.structure_plot_max
 ))
 write_file.close()
 
