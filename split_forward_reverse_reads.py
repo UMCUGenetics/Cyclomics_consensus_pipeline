@@ -17,6 +17,7 @@ if __name__ == "__main__":
     group.add_option("-o", dest = "outdir", metavar = "[PATH]", help = "full path to output folder [default = ./")
     group.add_option("-b", default = settings.bwa, dest = "bwa", metavar = "[PATH]", help = "full path to bwa executable [default bwa in settings.py]")
     group.add_option("-g", dest = "gene", metavar = "[STRING]", help = "gene of interest [default = TP53")
+    group.add_option("--id", dest = "sampleid", metavar = "[STRING]", help = "sampleID")
     group.add_option("--mp", default =settings.SPLIT_MIN_PERC, dest = "minperc", metavar = "[FLOAT]", help = "minimum percentage of forward or reverse reads required to include in forward or reverse bin [default SPLIT_MIN_PERC in settings.py")
     group.add_option("--sa", default = settings.sambamba, dest = "sambamba", metavar = "[PATH]", help = "full path to sambamba executable [default sambamba in settings.py]")
     group.add_option("--b5", default = settings.bam2m5, dest = "bam2m5", metavar = "[PATH]", help = "full path to bam2m5 executable [default bam2m5 in settings.py")
@@ -32,7 +33,11 @@ if __name__ == "__main__":
     else:
         outfolder = opt.outdir
 
-    sample = outfolder.split("/")[-2].split("_")[0]
+    if opt.sampleid:
+        sample = opt.sampleid
+    else:
+        sample = outfolder.split("/")[-2].split("_")[0]
+
     run = str(outfolder.split("/")[-1])
 
     if opt.gene:
