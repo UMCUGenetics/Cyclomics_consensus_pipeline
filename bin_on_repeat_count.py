@@ -209,7 +209,7 @@ if __name__ == "__main__":
         runid = "consensus_{x}".format(x=x)
         map_file = "{outfolder}/SH/{runid}_mapping.sh".format(outfolder=outfolder,runid=runid)
         write_file=open(map_file,"w")
-        write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --export=NONE\n#SBATCH --account={project}\n#SBATCH --mem={mem}G\n#SBATCH -o {map_file}.output -e {map_file}.error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user={mail}\n".format(
+        write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --export=NONE\n#SBATCH --account={project}\n#SBATCH --mem={mem}G\n#SBATCH -o {map_file}.output\n#SBATCH -e {map_file}.error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user={mail}\n".format(
             timeslot=opt.timeslotlow,
             project=opt.project,
             mem=opt.max_mem_target,
@@ -218,7 +218,7 @@ if __name__ == "__main__":
         ))
 
         map_folder = "{outfolder}/bin_consensus/{runid}".format(outfolder=outfolder,runid=runid)
-        write_file.write("{bwa_setting} \"@RG\\tID:{runid}\\tSM:{runid}\\tPL:NANOPORE\\tLB:{runid}\"{refgenome_full} {map_folder}.fasta > {map_folder}_full_consensus.sam\n".format(
+        write_file.write("{bwa_setting} \"@RG\\tID:{runid}\\tSM:{runid}\\tPL:NANOPORE\\tLB:{runid}\" {refgenome_full} {map_folder}.fasta > {map_folder}_full_consensus.sam\n".format(
             bwa_setting=settings.BWA_MEM,
             runid=runid,
             refgenome_full=opt.refgenome_full,
@@ -237,8 +237,8 @@ if __name__ == "__main__":
             map_folder=map_folder
         ))
         write_file.write("sleep 2\n")
-        write_file.write("rm {map_folder}_full_consensus.sam\nsleep 2\n)".format(map_folder=map_folder))
-        write_file.write("rm {map_folder}_full_consensus.bam\nsleep 2\n)".format(map_folder=map_folder))
+        write_file.write("rm {map_folder}_full_consensus.sam\nsleep 2\n".format(map_folder=map_folder))
+        write_file.write("rm {map_folder}_full_consensus.bam\nsleep 2\n".format(map_folder=map_folder))
         write_file.write("mv {map_folder}_full_consensus.sorted.bam* {outfolder}/bin_consensus/\nsleep 2\n".format(map_folder=map_folder, outfolder=outfolder))
         write_file.close()
         test += [map_file]
@@ -250,8 +250,7 @@ if __name__ == "__main__":
 
     cons_file = "{outfolder}/SH/consensus_calling_array.sh".format(outfolder=outfolder) 
     write_file = open(cons_file,"w")
-    write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n \
-                     #SBATCH -o {cons_file}_%A_%a.output\n#SBATCH -e {cons_file}_%A_%a.error\n#SBATCH --array=0-{number}%8\n".format(
+    write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n#SBATCH -o {cons_file}_%A_%a.output\n#SBATCH -e {cons_file}_%A_%a.error\n#SBATCH --array=0-{number}%8\n".format(
         timeslot=opt.timeslotmed,
         mem=opt.max_mem_target,
         project=opt.project,
