@@ -6,14 +6,14 @@ project = 'compgen'
 # Paths to scripts
 repo_path = "/hpc/compgen/tools/development/DEV_Cyclomics_consensus_pipeline/"
 venv = str(repo_path)+ "venv/bin/activate"
-default = str(repo_path) + "/run_dagcon_consensus.py"
-split = str(repo_path) + "/split_forward_reverse_reads.py"
-repeat = str(repo_path) + "/bin_on_repeat_count.py"
-calculate = str(repo_path) + "/calculate_depth.py"
-plot_dashboard = str(repo_path) + "/plot_Dashboard.R"
-check_numbers = str(repo_path) + "/check_numbers.py"
-find_read_bam = str(repo_path) + "/find_read_bam.py"
-structure = str(repo_path) + "/make_structure.py"
+default = str(repo_path) + "run_dagcon_consensus.py"
+split = str(repo_path) + "split_forward_reverse_reads.py"
+repeat = str(repo_path) + "bin_on_repeat_count.py"
+calculate = str(repo_path) + "calculate_depth.py"
+plot_dashboard = str(repo_path) + "plot_Dashboard.R"
+check_numbers = str(repo_path) + "check_numbers.py"
+find_read_bam = str(repo_path) + "find_read_bam.py"
+structure = str(repo_path) + "make_structure.py"
 
 # Paths to third party tools
 bwa = "/hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa"
