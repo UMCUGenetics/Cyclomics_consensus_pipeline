@@ -140,11 +140,11 @@ write_file.write("{calculate}\n".format(calculate=settings.calculate))
 write_file.write("cd {output_folder}/for_rev_split_insert/\n".format(output_folder=args.output_folder))
 write_file.write("{calculate}\n".format(calculate=settings.calculate))
 write_file.write("cd {output_folder}/split_insert/bin_consensus/\n".format(output_folder=args.output_folder))
-write_file.write("{calculate}".format(calculate=settings.calculate))
-write_file.write("rm {output_folder}/split_insert/bin_consensus_folder/\n".format(output_folder=args.output_folder))
+write_file.write("{calculate}\n".format(calculate=settings.calculate))
+write_file.write("rm -r {output_folder}/split_insert/bin_consensus_folder/\n".format(output_folder=args.output_folder))
 write_file.write("cd {output_folder}/split_backbone/bin_consensus/\n".format(output_folder=args.output_folder))
 write_file.write("{calculate}\n".format(calculate=settings.calculate))
-write_file.write("rm {output_folder}/split_backbone/bin_consensus_folder/\n".format(output_folder=args.output_folder))
+write_file.write("rm -r {output_folder}/split_backbone/bin_consensus_folder/\n".format(output_folder=args.output_folder))
 write_file.close()
 os.system("sbatch --depend={default},{split_insert},{split_backbone},{repeat_insert},{repeat_backbone} {output_folder}/jobs/Count_alleles.sh".format(
     default=jobid_default,
@@ -159,7 +159,7 @@ print("Submitted count alleles\n")
 
 """ Make Structure file and plot """
 write_file=open(str(args.output_folder) + "/jobs/Make_structure.sh","w")
-write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/jobs/Count_alleles.output\n#SBATCH -e {output_folder}/jobs/Count_alleles.error \n#SBATCH --mail-user={mail}\n".format(
+write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/jobs/Make_structure.output\n#SBATCH -e {output_folder}/jobs/Make_structure.error \n#SBATCH --mail-user={mail}\n".format(
     timeslot = settings.SLURM_JOB_TIME_HIGH,
     project=settings.project,
     mem=settings.MAX_MEM_TARGET,
@@ -191,7 +191,7 @@ print("Submitted structure file\n")
 
 """ Check numbers and make overview """
 write_file=open(str(args.output_folder) + "/jobs/Check.sh","w")
-write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/jobs/Count_alleles.output\n#SBATCH -e {output_folder}/jobs/Count_alleles.error \n#SBATCH --mail-user={mail}\n".format(
+write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/jobs/Check.output\n#SBATCH -e {output_folder}/jobs/Check.error \n#SBATCH --mail-user={mail}\n".format(
     timeslot = settings.SLURM_JOB_TIME_MED,
     project=settings.project,
     mem=settings.MAX_MEM_TARGET,
