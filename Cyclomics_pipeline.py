@@ -141,10 +141,10 @@ write_file.write("cd {output_folder}/for_rev_split_insert/\n".format(output_fold
 write_file.write("{calculate}\n".format(calculate=settings.calculate))
 write_file.write("cd {output_folder}/split_insert/bin_consensus/\n".format(output_folder=args.output_folder))
 write_file.write("{calculate}\n".format(calculate=settings.calculate))
-write_file.write("rm -r {output_folder}/split_insert/bin_consensus_folder/\n".format(output_folder=args.output_folder))
+write_file.write("rm {output_folder}/split_insert/bin_consensus_folder/ -r\n".format(output_folder=args.output_folder))
 write_file.write("cd {output_folder}/split_backbone/bin_consensus/\n".format(output_folder=args.output_folder))
 write_file.write("{calculate}\n".format(calculate=settings.calculate))
-write_file.write("rm -r {output_folder}/split_backbone/bin_consensus_folder/\n".format(output_folder=args.output_folder))
+write_file.write("rm {output_folder}/split_backbone/bin_consensus_folder/ -r\n".format(output_folder=args.output_folder))
 write_file.close()
 os.system("sbatch --depend={default},{split_insert},{split_backbone},{repeat_insert},{repeat_backbone} {output_folder}/jobs/Count_alleles.sh".format(
     default=jobid_default,
