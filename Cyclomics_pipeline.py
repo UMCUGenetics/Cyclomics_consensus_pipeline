@@ -210,7 +210,7 @@ write_file.write("{find_read_bam}  > bam_locations.txt\n".format(
     find_read_bam=settings.find_read_bam
 ))
 write_file.close()
-os.system("sbatch --depend={default} {output_folder}/jobs/Make_structure.sh".format(
+os.system("sbatch --depend={default} {output_folder}/jobs/Check.sh".format(
     default=jobid_default,
     output_folder=args.output_folder
 ))
