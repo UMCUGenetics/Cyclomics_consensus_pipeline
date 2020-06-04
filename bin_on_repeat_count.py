@@ -18,7 +18,7 @@ if __name__ == "__main__":
     group.add_option("--sa", default = settings.sambamba, dest = "sambamba", metavar = "[PATH]", help = "full path to sambamba binary [default sambamba in settings.py]")
     group.add_option("-b", default = settings.bwa, dest = "bwa", metavar = "[PATH]", help = "full path to bwa binary [default bwa in settings.py]")
     group.add_option("--rf", default = settings.full_ref, dest = "refgenome_full", metavar = "[PATH]", help = "full path to complete reference genome [default full_ref in settings.py]")
-    group.add_option("--project", default = settings.project, dest = "project", metavar = "STRING", help = "SGE project for submitting jobs [default project in settings.py]")
+    group.add_option("--project", default = settings.project, dest = "project", metavar = "STRING", help = "project for submitting jobs [default project in settings.py]")
     group.add_option("-m", default = settings.mail, dest = "mail", metavar = "[STRING]", help = "email used for job submitting [default mail in settings.py]")
     group.add_option("-a", default = settings.INSERT, dest = "insert", metavar = "[STRING]", help = "name of insert chromosome [default INSERT in settings.py]")
     group.add_option("--tlow", default = settings.SLURM_JOB_TIME_LOW, dest = "timeslotlow", metavar = "[TIME]", help = "time slot for jobs [default SLURM_JOB_TIME in settings.py]")
@@ -90,10 +90,11 @@ if __name__ == "__main__":
             output_id = str(outfolder) + "/SH/Make_fasta_{}".format(countfolder)
             output_file = "{output_id}.sh".format(output_id=output_id) 
  
-            if os.path.isfile(output_file):
+            if os.path.isfile(output_file): #check if file is already present. If so, do not continue.
                 test += [output_file]
                 countfolder += 1
                 continue
+
             write_file=open(output_file,"w")
             write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project}\n#SBATCH --mem={mem}G\n#SBATCH --export=NONE\n#SBATCH -o {output_id}.output -e {output_id}.error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user={mail}\n".format(
                 timeslot=opt.timeslotlow,
@@ -123,24 +124,22 @@ if __name__ == "__main__":
                     os.system("rm {}*".format(f))
 
                     if int(insert_count) >= 40:
-                        write_file.write("tar -axf {m5tarfile} {chopf1}* -O | {pbdagcon} - {param} | sed 's/>/>{chopf2}_/g' 1> {outfolder}/bin_consensus_folder/{folder}_consensus_40.fasta\n".format(
+                        write_file.write("tar -axf {m5tarfile} {chopf}* -O | {pbdagcon} - {param} | sed 's/>/>{chopf}_/g' 1>> {outfolder}/bin_consensus_folder/{folder}_consensus_40.fasta\n".format(
                             m5tarfile=m5tarfile,
-                            chopf1=f[0:-11],
+                            chopf=f[0:-11],
                             pbdagcon=opt.pbdagcon,
                             param=pbdagcon_param,
-                            chopf2=f[0:-10],
                             outfolder=outfolder,
                             folder=folder
                         ))
                     elif int(insert_count) > 0 and int(insert_count) <40:
                         for x in range(1, 40):
                             if int(insert_count) == x:
-                                write_file.write("tar -axf {m5tarfile} {chopf1}* -O | {pbdagcon} - {param} | sed 's/>/>{chopf2}_/g' 1> {outfolder}/bin_consensus_folder/{folder}_consensus_{x}.fasta\n".format(
+                                write_file.write("tar -axf {m5tarfile} {chopf}* -O | {pbdagcon} - {param} | sed 's/>/>{chopf}_/g' 1>> {outfolder}/bin_consensus_folder/{folder}_consensus_{x}.fasta\n".format(
                                     m5tarfile=m5tarfile,
-                                    chopf1=f[0:-11],
+                                    chopf=f[0:-11],
                                     pbdagcon=opt.pbdagcon,
                                     param=pbdagcon_param,
-                                    chopf2=f[0:-10],
                                     outfolder=outfolder,
                                     folder=folder,
                                     x=x 
@@ -150,7 +149,7 @@ if __name__ == "__main__":
 
             write_file.close()
             test += [output_file] 
-        countfolder += 1  
+            countfolder += 1  
 
     folder_dic={}
     for item in test:
@@ -160,13 +159,14 @@ if __name__ == "__main__":
         else:
             folder_dic[folder] += 1
 
+
     for item in folder_dic:
         out_file_id = "{outfolder}/SH/{item}".format(outfolder=outfolder,item=item)
         out_file = "{out_file_id}_array.sh".format(out_file_id=out_file_id)
         array_folder_id = "{outfolder}/SH/{folder}".format(outfolder=outfolder,folder=folder)
 
         write_file=open(out_file,"w")
-        write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n#SBATCH -o {array_folder_id}_%A_%a.output\n#SBATCH -e {array_folder_id}_%A_%a.error\n#SBATCH --array=1-{number}%4\n".format(
+        write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n#SBATCH -o {array_folder_id}_%A_%a.output\n#SBATCH -e {array_folder_id}_%A_%a.error\n#SBATCH --array=0-{number}%4\n".format(
                 timeslot=opt.timeslotmed,
                 mem=opt.max_mem_target,
                 project=opt.project,
@@ -199,8 +199,8 @@ if __name__ == "__main__":
          ))
     write_file.close()
 
-    if len(job_id) >500:	## this will set the maximum hold jobs to 500 (max HPC slurm is 1000)
-        job_id=job_id[-500:]
+    #if len(job_id) >500:	## this will set the maximum hold jobs to 500 (max HPC slurm is 1000)
+    #    job_id=job_id[-500:]
     job_output=subprocess.getoutput("sbatch -c 2 --depend={job_id_make_fasta} {merge_file}".format(job_id_make_fasta=job_id_make_fasta, merge_file=merge_file)) 
     job_id_merge=job_output.split()[3]
 
@@ -239,7 +239,8 @@ if __name__ == "__main__":
         write_file.write("sleep 2\n")
         write_file.write("rm {map_folder}_full_consensus.sam\nsleep 2\n".format(map_folder=map_folder))
         write_file.write("rm {map_folder}_full_consensus.bam\nsleep 2\n".format(map_folder=map_folder))
-        write_file.write("mv {map_folder}_full_consensus.sorted.bam* {outfolder}/bin_consensus/\nsleep 2\n".format(map_folder=map_folder, outfolder=outfolder))
+        write_file.write("mv {map_folder}_full_consensus.sorted.bam {outfolder}/bin_consensus/\nsleep 2\n".format(map_folder=map_folder, outfolder=outfolder))
+        write_file.write("mv {map_folder}_full_consensus.sorted.bam.bai {outfolder}/bin_consensus/\nsleep 2\n".format(map_folder=map_folder, outfolder=outfolder))
         write_file.close()
         test += [map_file]
         return test
@@ -262,3 +263,30 @@ if __name__ == "__main__":
     write_file.write("sh {outfolder}/SH/consensus_$SLURM_ARRAY_TASK_ID\_mapping.sh\n".format(outfolder=outfolder)) 
     write_file.close()
     job_output=subprocess.getoutput("sbatch --depend={job_id_merge} {cons_file}".format(job_id_merge=job_id_merge, cons_file=cons_file))
+    job_id_array=job_output.split()[3]
+
+    """ Calculate allele count and cleanup """
+    if not os.path.isdir("{output_folder}/jobs/".format(output_folder=outfolder)):
+        os.system("mkdir {output_folder}/jobs/".format(output_folder=outfolder))
+
+    write_file=open(str(outfolder) + "/jobs/Count_alleles.sh","w")
+    write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/jobs/Count_alleles.output\n#SBATCH -e {output_folder}/jobs/Count_alleles.error \n#SBATCH --mail-user={mail}\n".format(
+        timeslot=settings.SLURM_JOB_TIME_LOW,
+        project=settings.project,
+        mem=settings.MAX_MEM_TARGET,
+        output_folder=outfolder,
+        mail=settings.mail
+    ))
+    write_file.write("source {venv}\n".format(venv=settings.venv))
+    write_file.write("cd {output_folder}/bin_consensus/\n".format(output_folder=outfolder))
+    write_file.write("{calculate}\n".format(calculate=settings.calculate))
+    write_file.write("rm {output_folder}/bin_consensus_folder/ -r\n".format(output_folder=outfolder))
+    write_file.close() 
+
+    action = "sbatch --dependency={depend} {output_folder}/jobs/Count_alleles.sh".format(
+        depend=job_id_array,
+        output_folder=outfolder
+    )
+    os.system(action)
+
+
