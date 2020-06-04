@@ -25,7 +25,7 @@ if __name__ == "__main__":
     group.add_option("--mem_full", default = settings.MAX_MEM_FULL, dest = "max_mem_full", metavar = "[INT]", help = "memory used for jobs [default MAX_MEM_FULL in settings.py]")
     group.add_option("--threads", default = settings.THREADS, dest = "threads", metavar = "[INT]", help = "number threads used for jobs [default THREADS in settings.py]")
     group.add_option("--cl", default = settings.MIN_CONS_LEN, dest = "cons_len", metavar = "INT", help = "minimum length (bp) for consensus calling [default MIN_CONS_LEN in settings.py]")      
-    group.add_option("--project", default = settings.project, dest = "project", metavar = "STRING", help = "SGE project for submitting jobs [default project in settings.py]")
+    group.add_option("--project", default = settings.project, dest = "project", metavar = "STRING", help = "project for submitting jobs [default project in settings.py]")
     group.add_option("--bwa", default = settings.bwa, dest = "bwa", metavar = "[PATH]", help = "full path to bwa executable [default bwa in settings.py ]")
     group.add_option("--sa", default = settings.sambamba, dest = "sambamba", metavar = "[PATH]", help = "full path to sambamba executable [default sambamba in settings.py]")
 
@@ -350,9 +350,34 @@ if __name__ == "__main__":
     write_file.write("cd {}/SH\n".format(outdir))
     write_file.write("zip -m SH.zip *\n")
     write_file.close()
+    job_output = subprocess.getoutput("sbatch -c 2 --depend={jobid} {outdir}/SH/full_target_mapping.sh".format(jobid=job_id_make_fasta, outdir=outdir))
+    cons_job_id = job_output.split()[3]
 
-    #os.system("sbatch -c 2 --depend=" + str(job_id_make_fasta) + " {}/SH/full_target_mapping.sh".format(outdir))
-    job_output=subprocess.getoutput("sbatch -c 2 --depend=" + str(job_id_make_fasta) + " {}/SH/full_target_mapping.sh".format(outdir))
-    write_file = open("{}/SH/job_id_run_dagcon_consensus.sh".format(outdir), "w")
-    write_file.write(job_output.split()[3])
+    if not os.path.isdir("{outdir}/jobs/".format(outdir=outdir)):
+        os.system("mkdir {outdir}/jobs/".format(outdir=outdir))
+    write_file = open("{}/jobs/job_id_run_dagcon_consensus.sh".format(outdir), "w")
+    write_file.write(cons_job_id)
     write_file.close()
+
+    """ Calculate allele count and cleanup """
+    if not os.path.isdir("{outdir}/jobs/".format(outdir=outdir)):
+        os.system("mkdir {outdir}/jobs/".format(outdir=outdir))
+
+    write_file=open(str(outdir) + "/jobs/Count_alleles_default.sh","w")
+    write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {outdir}/jobs/Count_alleles_default.output\n#SBATCH -e {outdir}/jobs/Count_alleles_default.error \n#SBATCH --mail-user={mail}\n".format(
+        timeslot=settings.SLURM_JOB_TIME_LOW,
+        project=settings.project,
+        mem=settings.MAX_MEM_TARGET,
+        outdir=outdir,
+        mail=settings.mail
+    ))
+    write_file.write("source {venv}\n".format(venv=settings.venv))
+    write_file.write("cd {outdir}/\n".format(outdir=outdir))
+    write_file.write("{calculate}\n".format(calculate=settings.calculate))
+    write_file.close()
+
+    action = "sbatch --dependency={depend} {outdir}/jobs/Count_alleles_default.sh".format(
+        depend=cons_job_id,
+        outdir=outdir
+    )
+    os.system(action)
