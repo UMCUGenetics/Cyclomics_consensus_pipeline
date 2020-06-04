@@ -151,5 +151,9 @@ if __name__ == "__main__":
             run=run,
             sambamba=opt.sambamba
         ))    
+
+        os.system("{calculate}\n".format(calculate=settings.calculate))
         os.system("rm {run}_{state}.fasta".format(run=run, state=state))
+        os.system("rm tmp -r".format(run=run, state=state))
+
 
