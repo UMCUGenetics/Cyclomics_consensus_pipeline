@@ -30,7 +30,7 @@ action = "source {venv} && {default} -i {input_folder} -o {output_folder} -p {pr
     target_reference=settings.target_ref
 )
 os.system(action)
-jobid_default = open("{output_folder}/SH/job_id_run_dagcon_consensus.sh".format(output_folder=args.output_folder), "r").readline().strip()
+jobid_default = open("{output_folder}/jobs/job_id_run_dagcon_consensus.sh".format(output_folder=args.output_folder), "r").readline().strip()
 print("Submitted default consensus calling\n",action,jobid_default,"\n")
 
 
@@ -38,7 +38,7 @@ print("Submitted default consensus calling\n",action,jobid_default,"\n")
 """ Insert """
 os.system("mkdir {output_folder}/for_rev_split_insert".format(output_folder=args.output_folder))
 os.chdir("{output_folder}/for_rev_split_insert".format(output_folder=args.output_folder))
-action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {threads} --mail-type=FAIL --mail-user={mail} --depend={depend} --wrap=\"source {venv} && {split} -i {output_folder}/bam -o {output_folder}/for_rev_split_insert/ --rf={full_reference} -g {insert_locus} --id {sample_id}\"".format(
+action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {threads} --mail-type=FAIL --mail-user={mail} --dependency={depend} --wrap=\"source {venv} && {split} -i {output_folder}/bam -o {output_folder}/for_rev_split_insert/ --rf={full_reference} -g {insert_locus} --id {sample_id}\"".format(
     timeslot=settings.SLURM_JOB_TIME_MED,
     project=settings.project,
     mem=settings.MAX_MEM_TARGET,
@@ -52,14 +52,14 @@ action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {threa
     insert_locus=args.insert_locus,
     sample_id = args.prefix
 )
-jobid =subprocess.getoutput(action)
+jobid = subprocess.getoutput(action)
 jobid_split_insert = jobid.split()[3]
 print("Submitted forward reverse split insert\n",action,jobid_split_insert,"\n")
 
 """ Backbone """
 os.system("mkdir {output_folder}/for_rev_split_backbone".format(output_folder=args.output_folder))
 os.chdir("{output_folder}/for_rev_split_backbone".format(output_folder=args.output_folder))
-action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {threads} --mail-type=FAIL --mail-user={mail} --depend={depend} --wrap=\"source {venv} && {split} -i {output_folder}/bam -o {output_folder}/for_rev_split_backbone/ --rf={full_reference} -g {backbone_locus} --id {sample_id}\"".format(
+action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {threads} --mail-type=FAIL --mail-user={mail} --dependency={depend} --wrap=\"source {venv} && {split} -i {output_folder}/bam -o {output_folder}/for_rev_split_backbone/ --rf={full_reference} -g {backbone_locus} --id {sample_id}\"".format(
     timeslot=settings.SLURM_JOB_TIME_MED,
     project=settings.project,
     mem=settings.MAX_MEM_TARGET,
@@ -73,7 +73,7 @@ action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {threa
     backbone_locus=args.backbone_locus,
     sample_id = args.prefix
 )
-jobid =subprocess.getoutput(action)
+jobid = subprocess.getoutput(action)
 jobid_split_backbone = jobid.split()[3]
 print("Submitted forward reverse split backbone\n",action,jobid_split_backbone,"\n")
 
@@ -82,7 +82,7 @@ print("Submitted forward reverse split backbone\n",action,jobid_split_backbone,"
 """ Insert """
 os.system("mkdir {output_folder}/split_insert".format(output_folder=args.output_folder))
 os.chdir("{output_folder}/split_insert".format(output_folder=args.output_folder))
-action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {threads} --mail-type=FAIL --mail-user={mail} --depend={depend} --wrap=\"source {venv} && {repeat} --ib {output_folder}/bam/ --im {output_folder}/m5/ -o {output_folder}/split_insert --rf={full_reference} -a {insert_locus}\"".format(
+action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {threads} --mail-type=FAIL --mail-user={mail} --dependency={depend} --wrap=\"source {venv} && {repeat} --ib {output_folder}/bam/ --im {output_folder}/m5/ -o {output_folder}/split_insert --rf={full_reference} -a {insert_locus}\"".format(
     timeslot=settings.SLURM_JOB_TIME_HIGH,
     project=settings.project,
     mem=settings.MAX_MEM_TARGET,
@@ -95,14 +95,14 @@ action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {threa
     full_reference=settings.full_ref,
     insert_locus = args.insert_locus
 )
-jobid =subprocess.getoutput(action)
+jobid = subprocess.getoutput(action)
 jobid_repeat_insert = jobid.split()[3]
 print("Submitted repeat analysis insert\n",action,jobid_repeat_insert,"\n")
 
 """ Backbone """
 os.system("mkdir {output_folder}/split_backbone".format(output_folder=args.output_folder))
 os.chdir("{output_folder}/split_backbone".format(output_folder=args.output_folder))
-action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {threads} --mail-type=FAIL --mail-user={mail} --depend={depend} --wrap=\"source {venv} && {repeat} --ib {output_folder}/bam/ --im {output_folder}/m5/ -o {output_folder}/split_backbone --rf={full_reference} -a {backbone_locus}\"".format(
+action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {threads} --mail-type=FAIL --mail-user={mail} --dependency={depend} --wrap=\"source {venv} && {repeat} --ib {output_folder}/bam/ --im {output_folder}/m5/ -o {output_folder}/split_backbone --rf={full_reference} -a {backbone_locus}\"".format(
     timeslot=settings.SLURM_JOB_TIME_HIGH,
     project=settings.project,
     mem=settings.MAX_MEM_TARGET,
@@ -115,46 +115,9 @@ action = "sbatch -t {timeslot} -A {project} --export=NONE --mem={mem}G -c {threa
     full_reference=settings.full_ref,
     backbone_locus=args.backbone_locus
 )
-jobid =subprocess.getoutput(action)
+jobid = subprocess.getoutput(action)
 jobid_repeat_backbone = jobid.split()[3]
 print("Submitted repeat analysis backbone\n",action,jobid_repeat_backbone,"\n")
-
-
-"""Count alleles """
-if not os.path.isdir("{output_folder}/jobs/".format(output_folder=args.output_folder)):
-    os.system("mkdir {output_folder}/jobs/".format(output_folder=args.output_folder))
-
-write_file=open(str(args.output_folder) + "/jobs/Count_alleles.sh","w")
-write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/jobs/Count_alleles.output\n#SBATCH -e {output_folder}/jobs/Count_alleles.error \n#SBATCH --mail-user={mail}\n".format(
-    timeslot=settings.SLURM_JOB_TIME_LOW,
-    project=settings.project,
-    mem=settings.MAX_MEM_TARGET,
-    output_folder=args.output_folder,
-    mail=settings.mail
-))
-write_file.write("source {venv}\n".format(venv=settings.venv))
-write_file.write("cd {output_folder}\n".format(output_folder=args.output_folder))
-write_file.write("{calculate}\n".format(calculate=settings.calculate))
-write_file.write("cd {output_folder}/for_rev_split_backbone/\n".format(output_folder=args.output_folder))
-write_file.write("{calculate}\n".format(calculate=settings.calculate))
-write_file.write("cd {output_folder}/for_rev_split_insert/\n".format(output_folder=args.output_folder))
-write_file.write("{calculate}\n".format(calculate=settings.calculate))
-write_file.write("cd {output_folder}/split_insert/bin_consensus/\n".format(output_folder=args.output_folder))
-write_file.write("{calculate}\n".format(calculate=settings.calculate))
-write_file.write("rm {output_folder}/split_insert/bin_consensus_folder/ -r\n".format(output_folder=args.output_folder))
-write_file.write("cd {output_folder}/split_backbone/bin_consensus/\n".format(output_folder=args.output_folder))
-write_file.write("{calculate}\n".format(calculate=settings.calculate))
-write_file.write("rm {output_folder}/split_backbone/bin_consensus_folder/ -r\n".format(output_folder=args.output_folder))
-write_file.close()
-os.system("sbatch --depend={default},{split_insert},{split_backbone},{repeat_insert},{repeat_backbone} {output_folder}/jobs/Count_alleles.sh".format(
-    default=jobid_default,
-    split_insert=jobid_split_insert,
-    split_backbone=jobid_split_backbone,
-    repeat_insert=jobid_repeat_insert,
-    repeat_backbone=jobid_repeat_backbone,
-    output_folder=args.output_folder
-))
-print("Submitted count alleles\n")
 
 
 """ Make Structure file and plot """
@@ -182,14 +145,14 @@ write_file.write("{rscript} {plot} structure.txt {number_reads}\n".format(
 ))
 write_file.close()
 
-os.system("sbatch --depend={default} {output_folder}/jobs/Make_structure.sh".format(
+os.system("sbatch --dependency={default} {output_folder}/jobs/Make_structure.sh".format(
     default=jobid_default,
     output_folder=args.output_folder
 ))
 print("Submitted structure file\n")
 
 
-""" Check numbers and make overview """
+""" Check numbers and make overview of reads in targeted BAMs tars """
 write_file=open(str(args.output_folder) + "/jobs/Check.sh","w")
 write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/jobs/Check.output\n#SBATCH -e {output_folder}/jobs/Check.error \n#SBATCH --mail-user={mail}\n".format(
     timeslot = settings.SLURM_JOB_TIME_MED,
@@ -210,7 +173,7 @@ write_file.write("{find_read_bam}  > bam_locations.txt\n".format(
     find_read_bam=settings.find_read_bam
 ))
 write_file.close()
-os.system("sbatch --depend={default} {output_folder}/jobs/Check.sh".format(
+os.system("sbatch --dependency={default} {output_folder}/jobs/Check.sh".format(
     default=jobid_default,
     output_folder=args.output_folder
 ))
