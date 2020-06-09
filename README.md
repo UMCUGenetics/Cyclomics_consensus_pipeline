@@ -11,10 +11,12 @@ R/Rscript	v3.2.2	https://www.r-project.org/
 
 ## Make virtual python environment
 _(Tested with python v3.6.1)_ \
+```bash
 virtualenv -p python3 venv \
 source venv/bin/activate \
 easy_install pip \
 pip install -r requirements.txt 
+```
 
 ## Index full and targeted reference genomes
 Picard	(tested=v1.141) \
@@ -30,7 +32,7 @@ source venv/bin/activate
 1) Cyclomics_pipeline.py
 Wrapper script that includes scripts 2-9 as described below. \
     slurm            submit parallel jobs with SLURM. \
-    nocluster        do not use parallel jobs (commandline only) \
+    nocluster        do not use parallel jobs (commandline only)
 
 Usage:
 ```bash
