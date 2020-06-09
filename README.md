@@ -2,27 +2,27 @@
 Collection of scripts to process CyclomicsSeq (nanopore) data.
 
 ## Locally install these tools (version are tested versions
-bwa v0.7.17 https://github.com/lh3/bwa \
-sambamba v0.6.5 https://github.com/biod/sambamba \
-bam2m5 commit=0ef1a930b6a0426c55e8de950bf1ac22eef61bdf https://github.com/sein-tao/bam2m5 \
-pbdagcon tag=p4-mainline-127-g3c382f2, commit=3c382f2673fbf3c5305f5323188e790dc396ac9d	https://github.com/PacificBiosciences/pbdagcon \
-last-921 v921 http://last.cbrc.jp/ \
-R/Rscript v3.2.2 https://www.r-project.org/ 
+bwa	v0.7.17	https://github.com/lh3/bwa \
+sambamba	v0.6.5	https://github.com/biod/sambamba \
+bam2m5	commit=0ef1a930b6a0426c55e8de950bf1ac22eef61bdf	https://github.com/sein-tao/bam2m5 \
+pbdagcon	tag=p4-mainline-127-g3c382f2	commit=3c382f2673fbf3c5305f5323188e790dc396ac9d	https://github.com/PacificBiosciences/pbdagcon \
+last-921	v921	http://last.cbrc.jp/ \
+R/Rscript	v3.2.2	https://www.r-project.org/ 
 
 ## Make virtual python environment
-(Tested with python v3.6.1) \
+_ _(Tested with python v3.6.1)_ _ \
 virtualenv -p python3 venv \
 source venv/bin/activate \
 easy_install pip \
 pip install -r requirements.txt 
 
 ## Index full and targeted reference genomes
-Picard (tested=v1.141) \
-lastdb (v921) \
-bwa (v0.7.17)
+Picard	(tested=v1.141) \
+lastdb	(v921) \
+bwa	(v0.7.17)
  
 ## Run Scripts
-Always load virtualenv before running scripts
+__Always load virtualenv before running scripts__ 
 ```bash
 source venv/bin/activate
 ```
@@ -32,11 +32,11 @@ Wrapper script that includes scripts 2-9 as described below. \
     slurm            submit parallel jobs with SLURM. \
     nocluster        do not use parallel jobs (commandline only) \
 
-Usage: \
+Usage:
 ```bash
 python Cyclomics_pipeline.py {slurm/nocluster} {raw_data folder with fastq files} {output folder} {prefix (eg run or sampleID)} {insert locus (e.g. TP53)} {backbone locus (e.g. BB25)}
 ```
-optional: \
+_ _optional:_ _  \
     for either slurm or nocluster: \
         --insert_targetinterval   	structure file: define what is considered in-target \
         --structure_plot_max 		structure plot: maximum number of reads included in the plot. Note that this should be less than the number of reads in the run. \
@@ -74,7 +74,7 @@ Script to make a single file in which readID are linked to the tar-ball. Useful 
 9) plot_Dashboard.R \
 Rscript to plot statistics from the make_structure.py output file.
 
-#Additional scripts (not used in Cyclomics_pipeline.py) \
+#Additional scripts (not used in Cyclomics_pipeline.py) 
 
 10) run_dagcon_consensus_nocluster.py \
 Like run_dagcon_consensus.py, but without the use of a scheduler. Note that this might take a long time to process the data.
