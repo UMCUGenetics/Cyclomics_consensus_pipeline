@@ -1,7 +1,7 @@
 # Cyclomics_consensus_pipeline
 Collection of scripts to process CyclomicsSeq (nanopore) data.
 
-## Locally install these tools (version are tested versions
+## Locally install these tools (version are tested versions)
 bwa	v0.7.17	https://github.com/lh3/bwa \
 sambamba	v0.6.5	https://github.com/biod/sambamba \
 bam2m5	commit=0ef1a930b6a0426c55e8de950bf1ac22eef61bdf	https://github.com/sein-tao/bam2m5 \
@@ -22,6 +22,10 @@ pip install -r requirements.txt
 Picard	(tested=v1.141) \
 lastdb	(v921) \
 bwa	(v0.7.17)
+
+
+## Setting.py contiain paths and paramters for all scripts.
+See settings.py file 
  
 ## Run Scripts
 __Always load virtualenv before running scripts__ 
