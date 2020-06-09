@@ -17,11 +17,11 @@ if __name__ == "__main__":
     group.add_option("-b", dest = "blacklist", metavar = "[PATH]", help = "full path to blacklist file [default = off]")
     group.add_option("-c", default = settings.DAGCON_MIN_COV, dest = "coverage", metavar = "[INT]", help = "minimum coverage required for assembly [default = pgdagcon_coverage in settings.py]")
     group.add_option("-m", default = settings.mail, dest = "mail", metavar = "[STRING]", help = "email used for job submitting [default mail in settings.py]")
-    group.add_option("-t", default = settings.SLURM_JOB_TIME_LOW, dest = "timeslot", metavar = "[TIME]", help = "time slot for jobs [deafult SLURM_JOBTIME in settings.py]")
+    group.add_option("-t", default = settings.SLURM_JOB_TIME_SHORT, dest = "timeslot", metavar = "[TIME]", help = "time slot for jobs [deafult SLURM_JOBTIME in settings.py]")
     group.add_option("-n", default = settings.MAX_READS_JOB, dest = "number", metavar="[INT]", help = "max number of reads within a scatterjob [default MAX_READS_JOB in settings.py]")
     group.add_option("-p", dest = "prefix", metavar = "[STRING]", help = "prefix of BAM names [default = off (FASTQ input folder name)]")
     group.add_option("-s", default = settings.SLURM_PARALLEL_JOBS, dest = "slurm_job", metavar="[INT]", help = "number of parallel slurm [default SLURM_PARALLEL_JOPS in settings.py]")
-    group.add_option("--mem_target", default = settings.MAX_MEM_TARGET, dest = "max_mem_target", metavar = "[INT]", help = "memory used for jobs [default MAX_MEM_TARGET in setttings.py]")
+    group.add_option("--mem_target", default = settings.MAX_MEM_TARGET, dest = "max_mem_target", metavar = "[INT]", help = "memory used for jobs [default MAX_MEM_TARGET in settings.py]")
     group.add_option("--mem_full", default = settings.MAX_MEM_FULL, dest = "max_mem_full", metavar = "[INT]", help = "memory used for jobs [default MAX_MEM_FULL in settings.py]")
     group.add_option("--threads", default = settings.THREADS, dest = "threads", metavar = "[INT]", help = "number threads used for jobs [default THREADS in settings.py]")
     group.add_option("--cl", default = settings.MIN_CONS_LEN, dest = "cons_len", metavar = "INT", help = "minimum length (bp) for consensus calling [default MIN_CONS_LEN in settings.py]")      
@@ -151,9 +151,9 @@ if __name__ == "__main__":
         """Make targeted mapping jobs for each fastq file, split by MAX_READS_JOB"""
         write_file = open("{0}/SH/Targetmapping_{1}.sh".format(outdir, subnumber), "w")
         write_file.write("#!/bin/bash\n#SBATCH -t {time} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {outdir}/SH/{folder}_job_{subnumber}.output\n#SBATCH -e {outdir}/SH/{folder}_job_{subnumber}.error \n#SBATCH --mail-user={mail}\n".format(
-            time=opt.timeslot ,
+            time=opt.timeslot,
             project=opt.project,
-            mem=opt.max_mem_target ,
+            mem=opt.max_mem_target,
             outdir=outdir ,
             folder=folder, 
             subnumber=subnumber,
@@ -327,7 +327,7 @@ if __name__ == "__main__":
     """Make full genome mapping job and submit"""
     write_file = open("{}/SH/full_target_mapping.sh".format(outdir), "w")
     write_file.write("#!/bin/bash\n#SBATCH -t {time} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {outdir}/SH/full_target_mapping.output\n#SBATCH -e {outdir}/SH/full_target_mapping.error \n#SBATCH --mail-user={mail}\n".format(
-            time=opt.timeslot ,
+            time=opt.timeslot,
             project=opt.project,
             mem=opt.max_mem_full ,
             outdir=outdir ,
@@ -365,9 +365,9 @@ if __name__ == "__main__":
 
     write_file=open(str(outdir) + "/jobs/Count_alleles_default.sh","w")
     write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {outdir}/jobs/Count_alleles_default.output\n#SBATCH -e {outdir}/jobs/Count_alleles_default.error \n#SBATCH --mail-user={mail}\n".format(
-        timeslot=settings.SLURM_JOB_TIME_LOW,
+        timeslot=opt.timeslot,
         project=settings.project,
-        mem=settings.MAX_MEM_TARGET,
+        mem=opt.max_mem_target,
         outdir=outdir,
         mail=settings.mail
     ))
