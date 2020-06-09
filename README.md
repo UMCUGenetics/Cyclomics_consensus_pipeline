@@ -10,7 +10,7 @@ last-921	v921	http://last.cbrc.jp/ \
 R/Rscript	v3.2.2	https://www.r-project.org/ 
 
 ## Make virtual python environment
-_ _(Tested with python v3.6.1)_ _ \
+_(Tested with python v3.6.1)_ \
 virtualenv -p python3 venv \
 source venv/bin/activate \
 easy_install pip \
@@ -36,7 +36,7 @@ Usage:
 ```bash
 python Cyclomics_pipeline.py {slurm/nocluster} {raw_data folder with fastq files} {output folder} {prefix (eg run or sampleID)} {insert locus (e.g. TP53)} {backbone locus (e.g. BB25)}
 ```
-_ _optional:_ _  \
+_optional:_  \
     for either slurm or nocluster: \
         --insert_targetinterval   	structure file: define what is considered in-target \
         --structure_plot_max 		structure plot: maximum number of reads included in the plot. Note that this should be less than the number of reads in the run. \
