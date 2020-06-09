@@ -21,9 +21,9 @@ if __name__ == "__main__":
     group.add_option("--project", default = settings.project, dest = "project", metavar = "STRING", help = "project for submitting jobs [default project in settings.py]")
     group.add_option("-m", default = settings.mail, dest = "mail", metavar = "[STRING]", help = "email used for job submitting [default mail in settings.py]")
     group.add_option("-a", default = settings.INSERT, dest = "insert", metavar = "[STRING]", help = "name of insert chromosome [default INSERT in settings.py]")
-    group.add_option("--tlow", default = settings.SLURM_JOB_TIME_LOW, dest = "timeslotlow", metavar = "[TIME]", help = "time slot for jobs [default SLURM_JOB_TIME in settings.py]")
-    group.add_option("--tmed", default = settings.SLURM_JOB_TIME_MED, dest = "timeslotmed", metavar = "[TIME]", help = "time slot for jobs [default SLURM_JOB_TIME in settings.py]")
-    group.add_option("--maxfiles", dest = "maxfiles", metavar = "[INT]", help = "maximum number of files to be processed [default = all]")
+    group.add_option("--tshort", default = settings.SLURM_JOB_TIME_SHORT, dest = "timeslotshort", metavar = "[TIME]", help = "short time slot for jobs [default SLURM_JOB_TIME_SHORT in settings.py]")
+    group.add_option("--tmedium", default = settings.SLURM_JOB_TIME_MED, dest = "timeslotmed", metavar = "[TIME]", help = "time slot for jobs [default SLURM_JOB_TIME_MED in settings.py]")
+    group.add_option("--maxfiles", default = settings.MAX_FILE_COUNT, dest = "maxfiles", metavar = "[INT]", help = "maximum number of files to be processed [default = all]")
     group.add_option("--mem_full", default = settings.MAX_MEM_FULL, dest = "max_mem_full", metavar = "[INT]", help = "memory used for jobs [default MAX_MEM_FULL in settings.py]")
     group.add_option("--mem_target", default = settings.MAX_MEM_TARGET, dest = "max_mem_target", metavar = "[INT]", help = "memory used for jobs [default MAX_MEM_TARGET in settings.py]")
     group.add_option("--threads", default = settings.THREADS, dest = "threads", metavar = "[INT]", help = "number threads used for jobs [default THREADS in settings.py]")
@@ -61,13 +61,15 @@ if __name__ == "__main__":
         outfolder=outfolder
     ))
 
-    test=[]
-    job_id=[]
-    folders=os.listdir(opt.bamdir)
-    if opt.maxfiles:
-        maxfiles=int(opt.maxfiles)
+    test = []
+    job_id = []
+    folders = os.listdir(opt.bamdir)
+ 
+
+    if int(opt.maxfiles) > 0:
+        maxfiles = int(opt.maxfiles)
     else:
-        maxfiles=int(len(folders))
+        maxfiles = int(len(folders))
 
     countfolder=0
     for folder in folders:
@@ -97,7 +99,7 @@ if __name__ == "__main__":
 
             write_file=open(output_file,"w")
             write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project}\n#SBATCH --mem={mem}G\n#SBATCH --export=NONE\n#SBATCH -o {output_id}.output -e {output_id}.error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user={mail}\n".format(
-                timeslot=opt.timeslotlow,
+                timeslot=opt.timeslotshort,
                 project=opt.project,
                 mem=opt.max_mem_target,
                 output_id=output_id,
@@ -166,14 +168,15 @@ if __name__ == "__main__":
         array_folder_id = "{outfolder}/SH/{folder}".format(outfolder=outfolder,folder=folder)
 
         write_file=open(out_file,"w")
-        write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n#SBATCH -o {array_folder_id}_%A_%a.output\n#SBATCH -e {array_folder_id}_%A_%a.error\n#SBATCH --array=0-{number}%4\n".format(
+        write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n#SBATCH -o {array_folder_id}_%A_%a.output\n#SBATCH -e {array_folder_id}_%A_%a.error\n#SBATCH --array=0-{number}%{parallel}\n".format(
                 timeslot=opt.timeslotmed,
                 mem=opt.max_mem_target,
                 project=opt.project,
                 mail=opt.mail,
                 output_id=output_id,
                 array_folder_id=array_folder_id,
-                number=int(folder_dic[folder])-1
+                number=int(folder_dic[folder])-1,
+                parallel=settings.SLURM_PARALLEL_JOBS
             ))
 
         write_file.write("sh {out_file_id}_$SLURM_ARRAY_TASK_ID\.sh\n".format(out_file_id=out_file_id))
@@ -185,7 +188,7 @@ if __name__ == "__main__":
     merge_file = "{outfolder}/SH/merge_fasta.sh".format(outfolder=outfolder)
     write_file=open(merge_file,"w")
     write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --export=NONE\n#SBATCH --account={project}\n#SBATCH --mem={mem}G\n#SBATCH -o {merge_file}.output -e {merge_file}.error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user={mail}\n".format(
-        timeslot=opt.timeslotlow,
+        timeslot=opt.timeslotshort,
         project=opt.project,
         mem=opt.max_mem_target,
         merge_file=merge_file,
@@ -199,8 +202,6 @@ if __name__ == "__main__":
          ))
     write_file.close()
 
-    #if len(job_id) >500:	## this will set the maximum hold jobs to 500 (max HPC slurm is 1000)
-    #    job_id=job_id[-500:]
     job_output=subprocess.getoutput("sbatch -c 2 --depend={job_id_make_fasta} {merge_file}".format(job_id_make_fasta=job_id_make_fasta, merge_file=merge_file)) 
     job_id_merge=job_output.split()[3]
 
@@ -210,7 +211,7 @@ if __name__ == "__main__":
         map_file = "{outfolder}/SH/{runid}_mapping.sh".format(outfolder=outfolder,runid=runid)
         write_file=open(map_file,"w")
         write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --export=NONE\n#SBATCH --account={project}\n#SBATCH --mem={mem}G\n#SBATCH -o {map_file}.output\n#SBATCH -e {map_file}.error \n#SBATCH --mail-type=FAIL\n#SBATCH --mail-user={mail}\n".format(
-            timeslot=opt.timeslotlow,
+            timeslot=opt.timeslotshort,
             project=opt.project,
             mem=opt.max_mem_target,
             map_file=map_file,
@@ -239,8 +240,6 @@ if __name__ == "__main__":
         write_file.write("sleep 2\n")
         write_file.write("rm {map_folder}_full_consensus.sam\nsleep 2\n".format(map_folder=map_folder))
         write_file.write("rm {map_folder}_full_consensus.bam\nsleep 2\n".format(map_folder=map_folder))
-        write_file.write("mv {map_folder}_full_consensus.sorted.bam {outfolder}/bin_consensus/\nsleep 2\n".format(map_folder=map_folder, outfolder=outfolder))
-        write_file.write("mv {map_folder}_full_consensus.sorted.bam.bai {outfolder}/bin_consensus/\nsleep 2\n".format(map_folder=map_folder, outfolder=outfolder))
         write_file.close()
         test += [map_file]
         return test
@@ -251,13 +250,14 @@ if __name__ == "__main__":
 
     cons_file = "{outfolder}/SH/consensus_calling_array.sh".format(outfolder=outfolder) 
     write_file = open(cons_file,"w")
-    write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n#SBATCH -o {cons_file}_%A_%a.output\n#SBATCH -e {cons_file}_%A_%a.error\n#SBATCH --array=1-{number}%8\n".format(
+    write_file.write("#!/bin/bash\n#SBATCH -t {timeslot}\n#SBATCH --mem={mem}G\n#SBATCH --account={project}\n#SBATCH --mail-type=FAIL\n#SBATCH --export=NONE\n#SBATCH --mail-user={mail}\n#SBATCH -o {cons_file}_%A_%a.output\n#SBATCH -e {cons_file}_%A_%a.error\n#SBATCH --array=1-{number}%{parallel}\n".format(
         timeslot=opt.timeslotmed,
         mem=opt.max_mem_target,
         project=opt.project,
         mail=opt.mail,
         cons_file=cons_file,
-        number=len(test)
+        number=len(test),
+        parallel=settings.SLURM_PARALLEL_JOBS
     )) 
 
     write_file.write("sh {outfolder}/SH/consensus_$SLURM_ARRAY_TASK_ID\_mapping.sh\n".format(outfolder=outfolder)) 
@@ -271,11 +271,11 @@ if __name__ == "__main__":
 
     write_file=open(str(outfolder) + "/jobs/Count_alleles.sh","w")
     write_file.write("#!/bin/bash\n#SBATCH -t {timeslot} \n#SBATCH --account={project} \n#SBATCH --mem={mem}G \n#SBATCH --export=NONE\n#SBATCH -o {output_folder}/jobs/Count_alleles.output\n#SBATCH -e {output_folder}/jobs/Count_alleles.error \n#SBATCH --mail-user={mail}\n".format(
-        timeslot=settings.SLURM_JOB_TIME_LOW,
-        project=settings.project,
-        mem=settings.MAX_MEM_TARGET,
+        timeslot=opt.timeslotshort,
+        project=opt.project,
+        mem=opt.max_mem_target,
         output_folder=outfolder,
-        mail=settings.mail
+        mail=opt.mail
     ))
     write_file.write("source {venv}\n".format(venv=settings.venv))
     write_file.write("cd {output_folder}/bin_consensus/\n".format(output_folder=outfolder))
