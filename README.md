@@ -24,7 +24,7 @@ lastdb	(v921) \
 bwa	(v0.7.17)
 
 
-## Setting.py contiain paths and paramters for all scripts.
+## Setting.py contains paths and parameters used in the scripts.
 See settings.py file 
  
 ## Run Scripts
