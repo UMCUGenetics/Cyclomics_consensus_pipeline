@@ -6,9 +6,11 @@ project = 'compgen'
 # Paths to scripts
 repo_path = "/hpc/compgen/tools/development/DEV_Cyclomics_consensus_pipeline/"
 venv = str(repo_path)+ "venv/bin/activate"
-default = str(repo_path) + "run_dagcon_consensus.py"
+default_slurm = str(repo_path) + "run_dagcon_consensus.py"
+repeat_slurm = str(repo_path) + "bin_on_repeat_count.py"
+default_nocluster = str(repo_path) + "run_dagcon_consensus_nocluster.py"
+repeat_nocluster = str(repo_path) + "bin_on_repeat_count_nocluster.py"
 split = str(repo_path) + "split_forward_reverse_reads.py"
-repeat = str(repo_path) + "bin_on_repeat_count.py"
 calculate = str(repo_path) + "calculate_depth.py"
 plot_dashboard = str(repo_path) + "plot_Dashboard.R"
 check_numbers = str(repo_path) + "check_numbers.py"
@@ -22,7 +24,7 @@ bam2m5 = "/hpc/compgen/tools/bam2m5/bam2m5.py"
 pbdagcon = "/hpc/compgen/tools/pbdagcon/src/cpp/pbdagcon"
 lastal = "/hpc/compgen/tools/last-921/src/lastal"
 lastsplit = "/hpc/compgen/tools/last-921/src/last-split"
-lastparam = "/hpc/compgen/tools/development/DEV_Cyclomics_consensus_pipeline/data_files/last_params"
+lastparam = str(repo_path) + "data_files/last_params"
 mafconvert = "/hpc/compgen/tools/last-921/scripts/maf-convert"
 rscript= "/hpc/local/CentOS7/common/lang/R/3.2.2/bin/Rscript"
 
@@ -33,9 +35,9 @@ target_ref = "/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/BRAF_TP5
 
 
 #  General settings
-SLURM_JOB_TIME_LOW = "2:00:00"		
-SLURM_JOB_TIME_MED = "4:00:00"		
-SLURM_JOB_TIME_HIGH = "196:00:00"
+SLURM_JOB_TIME_SHORT = "2:00:00"		
+SLURM_JOB_TIME_MED = "8:00:00"
+SLURM_JOB_TIME_LONG = "196:00:00"
 MAX_MEM_TARGET = 10
 MAX_MEM_FULL  = 32 
 THREADS = 2 
@@ -46,7 +48,7 @@ MAX_READS_JOB_PLOT = 50000  #Note that this number must be lower tham the total 
 
 #run_dagcon_consensus.py specific settings
 DAGCON_MIN_COV = 10
-SLURM_PARALLEL_JOBS = 500
+SLURM_PARALLEL_JOBS = 200
 MAX_READS_JOB = 1000
 
 #split_forward_reverse_reads.py specific settings
@@ -56,6 +58,7 @@ STATES = ["forward","reverse"]
 #bin_on_repeat_count.py specific settings
 INSERT = "TP53"
 PBDAGCON_PARAM = " -c 1 -t 0 -j 2 "
+MAX_FILE_COUNT = 0
 
 #make_structure.py specific settings
 STRUCTURE_OVERLAP = 100
