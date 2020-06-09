@@ -50,7 +50,7 @@ _optional:_  \
         --maxfilecount 			bin_on_repeat_count.py: maximum number of files used in bin repeat. This might be helpful with large runs that will take a very long time if all data is used. Number of file * number MAX_READS_JOB = max number of reads.
 
 	
-# Script that are used in Cyclomics_pipeline.py, but can also be manually runned
+** Script that are used in Cyclomics_pipeline.py, but can also be manually runned ** 
 2) run_dagcon_consensus.py / run_dagcon_consensus_nocluster.py \
 This is the main script to process the Cyclomics nanopore data.  
 Nanopore reads will be LAST-split to a targeted reference genome including the backbone and insert(gene) sequences.  
