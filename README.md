@@ -2,18 +2,18 @@
 Collection of scripts to process CyclomicsSeq (nanopore) data.
 
 ## Locally install these tools (version are tested versions
-bwa	v0.7.17	https://github.com/lh3/bwa\
-sambamba	v0.6.5 https://github.com/biod/sambamba\ 
-bam2m5	commit=0ef1a930b6a0426c55e8de950bf1ac22eef61bdf		https://github.com/sein-tao/bam2m5\
-pbdagcon	tag=p4-mainline-127-g3c382f2, commit=3c382f2673fbf3c5305f5323188e790dc396ac9d	https://github.com/PacificBiosciences/pbdagcon\ 
-last-921	v921	http://last.cbrc.jp/\
-R/Rscript 	v3.2.2	https://www.r-project.org/\
+bwa v0.7.17 https://github.com/lh3/bwa\
+sambamba v0.6.5 https://github.com/biod/sambamba \
+bam2m5 commit=0ef1a930b6a0426c55e8de950bf1ac22eef61bdf https://github.com/sein-tao/bam2m5 \
+pbdagcon tag=p4-mainline-127-g3c382f2, commit=3c382f2673fbf3c5305f5323188e790dc396ac9d	https://github.com/PacificBiosciences/pbdagcon\
+last-921 v921 http://last.cbrc.jp/\
+R/Rscript v3.2.2 https://www.r-project.org/\
 
 ## Make virtual python environment
-(Tested with python v3.6.1)\ 
+(Tested with python v3.6.1)\
 virtualenv -p python3 venv\
 source venv/bin/activate\
-easy_install pip\ 
+easy_install pip\
 pip install -r requirements.txt\
 
 ## Index full and targeted reference genomes
