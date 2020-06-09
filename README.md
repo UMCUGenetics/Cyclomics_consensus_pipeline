@@ -10,11 +10,11 @@ last-921	v921	http://last.cbrc.jp/ \
 R/Rscript	v3.2.2	https://www.r-project.org/ 
 
 ## Make virtual python environment
-_(Tested with python v3.6.1)_ \
+_(Tested with python v3.6.1)_
 ```bash
-virtualenv -p python3 venv \
-source venv/bin/activate \
-easy_install pip \
+virtualenv -p python3 venv
+source venv/bin/activate
+easy_install pip
 pip install -r requirements.txt 
 ```
 
