@@ -31,10 +31,6 @@ source ./activate cyclocons
 pip install -r requirements.txt
 ```
 
-Additionally:
-Python2 must exist (in $PATH) for LAST, their scripts state 2.x with x>=6.
-Python 2.7 worked when testing.
-
 ## Prepare reference genome fasta
 Todo: Explain reference genomes used. Preferably before running indexing and all as adding a BB to the ref genome is going to undo your work.
 
@@ -63,13 +59,13 @@ Be sure the reference genome basename and path is correct, a mistake in the nami
 
 ### bwa
 ```bash
-bwa index ./BRAF_TP53_EGFR_BB_pjet.fasta
+bwa index ${ref_genome}.fasta
 ```
 
 ## Setting.py contains paths and parameters used in the scripts.
 See settings.py file
 Make sure the `venv` variable is an executable command that starts the python environment prepared earlier.
-
+The `mafconvert` variable needs to combine a `python2` call and the path to the script, be sure there's a space at the end of `python2 `.
 
 
 ## Run Scripts
