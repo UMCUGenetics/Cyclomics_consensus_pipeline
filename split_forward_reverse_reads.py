@@ -54,12 +54,12 @@ if __name__ == "__main__":
         repo=repo,
         outfolder=outfolder
     ))
-  
+
     os.system("git --git-dir={repo}/.git log --tags > {outfolder}/GIT_split_forward_reverse_reads.log".format(
         repo=repo,
         outfolder=outfolder
     ))
-  
+
     if not os.path.isdir("{outfolder}/tmp".format(outfolder=outfolder)):
         os.system("mkdir {outfolder}/tmp".format(outfolder=outfolder))
 
@@ -86,10 +86,10 @@ if __name__ == "__main__":
                     f_path = "{outfolder}/{f}".format(outfolder=outfolder,f=f)
                     if os.path.isfile(tarfile) == False:
                         break
-                    os.system("tar -axf {tarfile} {f}".format(
+                    os.system("tar -xf {tarfile} {f}".format(
                         tarfile=tarfile,
                         f=f
-                    )) 
+                    ))
                     in_file = pysam.AlignmentFile(f_path, "rb")
                     forward = 0
                     reverse = 0
@@ -117,43 +117,41 @@ if __name__ == "__main__":
                     elif forward > reverse:
                         count_for_org += 1
 
-                    if total > 0: 
+                    if total > 0:
                         rev_readperc = (float(reverse)/float(total))*100
                         for_readperc = (float(forward)/float(total))*100
                         if rev_readperc > float(opt.minperc):
-                            os.system("tar -axf {tarfilec} {conf} -O >> {reverse_fasta}".format(
+                            os.system("tar -xOf {tarfilec} {conf} >> {reverse_fasta}".format(
                                 tarfilec=tarfilec,
                                 conf=conf,
                                 reverse_fasta=reverse_fasta
                             ))
-  
+
                             count_rev_new += 1
                         elif for_readperc > float(opt.minperc):
-                            os.system("tar -axf {tarfilec} {conf} -O >> {forward_fasta}".format(
+                            os.system("tar -xOf {tarfilec} {conf} >> {forward_fasta}".format(
                                 tarfilec=tarfilec,
                                 conf=conf,
                                 forward_fasta=forward_fasta
                             ))
                             count_for_new += 1
                         else:
-                            pass # discard reads      
+                            pass # discard reads
                     else:
                         rev_readperc = 0
                         for_readperc = 0
                     print("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}".format(f, reverse, forward, count_rev_new, count_for_new, rev_readperc, for_readperc))
-     
+
     for state in states:
-        os.system("{bwa} \"@RG\\tID:{state}\\tSM:{sample}\\tPL:NANOPORE\\tLB:{sample}\" {refgenome_full} {run}_{state}.fasta | {sambamba} view -S -f bam /dev/stdin | {sambamba} sort -t 2 --tmpdir=./tmp /dev/stdin -o {run}_{state}.sorted.bam".format(
+        action = "{bwa} \"@RG\\tID:{state}\\tSM:{sample}\\tPL:NANOPORE\\tLB:{sample}\" {refgenome_full} {run}_{state}.fasta | {sambamba} view -S -f bam /dev/stdin | {sambamba} sort -t 2 --tmpdir=./tmp /dev/stdin -o {run}_{state}.sorted.bam".format(
             bwa=settings.BWA_MEM,
             state=state,
             sample=sample,
             refgenome_full=opt.refgenome_full,
             run=run,
             sambamba=opt.sambamba
-        ))    
-
+        )
+        os.system(action)
         os.system("{calculate}\n".format(calculate=settings.calculate))
         os.system("rm {run}_{state}.fasta".format(run=run, state=state))
-        os.system("rm tmp -r".format(run=run, state=state))
-
-
+        os.system("rm -r tmp".format(run=run, state=state))
