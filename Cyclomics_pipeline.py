@@ -186,7 +186,7 @@ def nocluster (args):
         full_reference=settings.full_ref,
         target_reference=settings.target_ref
     )
-    print("Default consensus calling:",action)
+    print("Default consensus calling:", action)
     os.system(action)
     print("Finished default consensus calling\n")
 

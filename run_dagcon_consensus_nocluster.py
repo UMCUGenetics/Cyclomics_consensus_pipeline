@@ -266,9 +266,6 @@ if __name__ == "__main__":
                 )
                 os.system(action)
 
-
-                print("\n")
-
             if count == (opt.number):
                 subnumber += 1
                 if total == len(line_dic[fastq_file]):
