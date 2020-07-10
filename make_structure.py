@@ -18,7 +18,7 @@ class Segment:
         self.pos = int(pos)
         self.mapq = int(mapq)
         self.length = int(length)
-        self.end = ( int(pos) + int(length) )		
+        self.end = ( int(pos) + int(length) )
         self.clip = False
         self.pid = False
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     parser = OptionParser()
     group = OptionGroup(parser, "Main options")
     group.add_option("-i", default = "./", dest = "wkdir", help = "full path to folder with BAM files [default = ./")
-    group.add_option("-o", default = settings.STRUCTURE_OVERLAP, dest = "overlap", help = "overlap in bp to determine if insert fragements are from the same molecule/amplicon [default STRUCTURE_OVERLAP in settings.py]") 
+    group.add_option("-o", default = settings.STRUCTURE_OVERLAP, dest = "overlap", help = "overlap in bp to determine if insert fragements are from the same molecule/amplicon [default STRUCTURE_OVERLAP in settings.py]")
     group.add_option("-f", default = settings.STRUCTURE_FLANK, dest = "flank", help = "flank to determine unmapped regions to either BB or I [default STRUCTURE_FLANK in settings.py")
     group.add_option("-m", default = settings.STRUCTURE_MAD, dest = "mad_threshold", help = " if mad score for insert startsite is more than threshold, report threshold [default STRUCTURE_MAD in settings.py]")
     group.add_option("-r", default = settings.STRUCTURE_INTARGET, dest = "interval", help = "interval region of interest chr:start-stop [default STRUCTURE_INTARGET in settings.py] ")
@@ -66,20 +66,20 @@ if __name__ == "__main__":
     mad_threshold = float(opt.mad_threshold)
 
     print("ReadName\treadStructure\tMADinsert\tInsertCount\tDifInserts\tBackboneCount\tDifBackbone\tB\tI\tBI\tMeanBaseQualityMappedRead")
-    for subfolder in subprocess.getoutput("find " + str(wkdir) + " -mindepth 1 -type d -iname \"*\"").split(): 
+    for subfolder in subprocess.getoutput("find " + str(wkdir) + " -mindepth 1 -type d -iname \"*\"").split():
         tarfile = str(subfolder) + "/" + str(subfolder).split("/")[-1] + ".tar"
         if os.path.isfile(tarfile):
             files = subprocess.getoutput("tar -tf " + str(tarfile)).split()
             for f in files:
                 if "bai" not in f:
-                    os.system("tar -axf " + str(tarfile) + " " + str(f))
+                    os.system("tar -xf " + str(tarfile) + " " + str(f))
                     bamfile = pysam.AlignmentFile(str(f), "rb")
                     rlist = []
                     total = 0
                     length = 0
                     quality = [0]
                     startlist = []
-                    for line in bamfile: ## parse BAM file 
+                    for line in bamfile: ## parse BAM file
                         """Determine hardclip start and end, mapped length, original length"""
                         length = line.query_length  	## length in FASTQ
                         length_mapped = line.reference_length ## mapped length
@@ -88,7 +88,7 @@ if __name__ == "__main__":
                                 start = line.cigartuples[-1][1]
                             else:
                                 start = 0
-                            if line.cigartuples[0][0] == 5: 
+                            if line.cigartuples[0][0] == 5:
                                 stop = line.cigartuples[0][1]
                             else:
                                 stop = 0
@@ -120,14 +120,14 @@ if __name__ == "__main__":
                     full_sequence = ""
                     location = {}
                     backbone = {}
-                    startsite = [] 
+                    startsite = []
                     z = 0
                     y = 0
                     b = 0
                     i_fragment = [0]
                     b_fragment = [0]
                     def ReturnChunk(length, backbone, ori, chrom, position, mappedl, number):
-                         return '{}:{}:{}:{}:{}:{}:{},'.format(length, backbone, ori, chrom, position, mappedl, number) 
+                         return '{}:{}:{}:{}:{}:{}:{},'.format(length, backbone, ori, chrom, position, mappedl, number)
 
                     for item in rlist:
                         if dic["gap"][z] > 0: ## print gaps in structure
@@ -135,10 +135,10 @@ if __name__ == "__main__":
                         if "BB" in item[0] or "pJet" in item[0] or "pUC" in item[0]:
                             try:
                                 backbone[item[0]]
-                                b_fragment[backbone[item[0]]] += 1 
+                                b_fragment[backbone[item[0]]] += 1
                             except:
                                 backbone[item[0]] = b
-                                if b > 0:	
+                                if b > 0:
                                     b_fragment += [1]
                                 else:
                                     b_fragment[backbone[item[0]]] += 1
@@ -163,7 +163,7 @@ if __name__ == "__main__":
                                     full_sequence += ReturnChunk(item[5], "I", "R", item[0], item[1], item[7], location[item[1]])
                                 else:
                                     full_sequence += ReturnChunk(item[5], "I", "F", item[0], item[1], item[7], location[item[1]])
-                            except: ## outside range, thus considered different amplicon		
+                            except: ## outside range, thus considered different amplicon
                                 y += 1
                                 i_fragment += [1]
                                 for i in range(int(item[1]) - overlap, int(item[1]) + overlap):
@@ -183,7 +183,7 @@ if __name__ == "__main__":
 
                     bb_count = full_sequence.count("BB:") ## ":" is added to prevent additional counting in chromosome name
                     i_count = full_sequence.count("I:")
-  
+
                     printline = str(f) + "\t"
                     if len(full_sequence)> 0:
                         printline += full_sequence + "\t"
@@ -215,9 +215,9 @@ if __name__ == "__main__":
                         printline += str("%.3f" % float(float(bb_count)/float(i_count))) + "\t"
                     except:
                         printline += "nan\t"
-                    try: 
+                    try:
                         printline += str("%.2f" % (meanq))
                     except:
                        printline += "nan"
                     print(printline)
-                    os.system("rm " + str(f)) 
+                    os.system("rm " + str(f))

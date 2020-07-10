@@ -2,6 +2,7 @@
 import os
 from optparse import OptionParser
 from optparse import OptionGroup
+import settings
 
 if __name__ == "__main__":
     parser = OptionParser();
@@ -25,9 +26,9 @@ if __name__ == "__main__":
         else:
             dic = {"exon12":"17:7577000-7577180","BB22":"BB22:1-248","BB24":"BB24:1-248","BB25":"BB25:1-248","BBCR":"BB22:1-248","TP53":"17:7565097-7590856","PJET":"PJET:1-2974","EGFR":"7:55081714-55329313"}
 
-    sambamba = "/hpc/local/CentOS7/cog/software/sambamba-0.6.5/sambamba"
+    sambamba = settings.sambamba
     cwd = os.getcwd()
-    cosmic = "/hpc/compgen/tools/Cyclomics_consensus_pipeline/data_files/COSMIC_mutations.bed"
+    cosmic = settings.cosmic
 
     def calculate_coverage(sambamba, region, infile, item):
         if opt.blacklist:
@@ -50,4 +51,3 @@ if __name__ == "__main__":
                 os.system(calculate_coverage(sambamba, dic[item], infile, item))
             if opt.cosmic == "yes":
                 os.system(calculate_coverage(sambamba, cosmic, infile, "cosmic"))
-

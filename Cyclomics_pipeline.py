@@ -186,13 +186,13 @@ def nocluster (args):
         full_reference=settings.full_ref,
         target_reference=settings.target_ref
     )
+    print("Default consensus calling:", action)
     os.system(action)
-    print(action)
     print("Finished default consensus calling\n")
 
     """ Forward and Reverse splitting """
     """ Insert """
-    os.system("mkdir {output_folder}/for_rev_split_insert".format(output_folder=args.output_folder))
+    os.system("mkdir -p {output_folder}/for_rev_split_insert".format(output_folder=args.output_folder))
     os.chdir("{output_folder}/for_rev_split_insert".format(output_folder=args.output_folder))
     action = "source {venv} && {split} -i {output_folder}/bam -o {output_folder}/for_rev_split_insert/ --rf={full_reference} -g {insert_locus} --id {sample_id}".format(
         venv=settings.venv,
@@ -202,8 +202,8 @@ def nocluster (args):
         insert_locus=args.insert_locus,
         sample_id = args.prefix
     )
+    print("Forward and Reverse splitting, Insert:",action)
     os.system(action)
-    print(action)
     print("Finshed forward reverse split insert\n")
 
 
@@ -218,8 +218,8 @@ def nocluster (args):
         backbone_locus=args.backbone_locus,
         sample_id = args.prefix
     )
+    print("Forward and Reverse splitting, Backbone:", action)
     os.system(action)
-    print(action)
     print("Finished forward reverse split backbone\n")
 
 
@@ -234,8 +234,8 @@ def nocluster (args):
         full_reference=settings.full_ref,
         insert_locus = args.insert_locus
     )
+    print("Repeat count analysis, Insert:", action)
     os.system(action)
-    print(action)
     print("Finshed repeat analysis insert\n")
 
 
@@ -249,8 +249,8 @@ def nocluster (args):
         full_reference=settings.full_ref,
         backbone_locus=args.backbone_locus
     )
+    print("Repeat count analysis, Backbone:", action)
     os.system(action)
-    print(action)
     print("Finshed repeat analysis backbone\n")
 
 
@@ -264,16 +264,16 @@ def nocluster (args):
         overlap=settings.STRUCTURE_OVERLAP,
         insert_targetinterval=args.insert_targetinterval
     )
-    os.system(action) 
-    print(action)
+    print("Make Structure file and plot:", action)
+    os.system(action)
 
     action = ("{rscript} {plot} structure.txt {number_reads}\n".format(
         rscript=settings.rscript,
         plot=settings.plot_dashboard,
         number_reads=args.structure_plot_max
     ))
-    os.system(action)
     print(action)
+    os.system(action)
     print("Finished structure file\n")
 
 
@@ -285,16 +285,16 @@ def nocluster (args):
         input_folder=args.input_folder,
         output_folder=args.output_folder
     )
-    os.system(action)
     print(action)
+    os.system(action)
 
     os.chdir("{output_folder}/bam".format(output_folder=args.output_folder))
     action = "source {venv} && {find_read_bam}  > bam_locations.txt\n".format(
         venv=settings.venv,
         find_read_bam=settings.find_read_bam
     )
-    os.system(action)
     print(action)
+    os.system(action)
 
     print("Finished cleanup\n")
     os.chdir("{output_folder}".format(output_folder=args.output_folder))
@@ -325,6 +325,9 @@ if __name__ == "__main__":
     parser_nocluster.set_defaults(func = nocluster)
 
     args = parser.parse_args()
-    args.func(args) 
-
-
+    # Temp fix for relative paths but probably breaks full paths
+    # Python lacks a proper realpath, MacOS completely lacks a realpath.
+    # "Think different", yo.
+    args.input_folder  = os.path.abspath(args.input_folder)
+    args.output_folder = os.path.abspath(args.output_folder)
+    args.func(args)
