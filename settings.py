@@ -3,18 +3,22 @@ mail = 'm.elferink@umcutrecht.nl'	#Email adress
 project = 'compgen'			#Project name for Slurm cluster
 
 # Paths to scripts
-repo_path = "/hpc/compgen/tools/development/DEV_Cyclomics_consensus_pipeline/"	
+repo_path = "/hpc/compgen/tools/Cyclomics_consensus_pipeline/"
 venv = str(repo_path)+ "venv/bin/activate"
-default_slurm = str(repo_path) + "run_dagcon_consensus.py"
-repeat_slurm = str(repo_path) + "bin_on_repeat_count.py"
-default_nocluster = str(repo_path) + "run_dagcon_consensus_nocluster.py"
-repeat_nocluster = str(repo_path) + "bin_on_repeat_count_nocluster.py"
-split = str(repo_path) + "split_forward_reverse_reads.py"
-calculate = str(repo_path) + "calculate_depth.py"
-plot_dashboard = str(repo_path) + "plot_Dashboard.R"
-check_numbers = str(repo_path) + "check_numbers.py"
-find_read_bam = str(repo_path) + "find_read_bam.py"
-structure = str(repo_path) + "make_structure.py"
+# Don't touch, should always be the same:
+default_slurm = repo_path + "run_dagcon_consensus.py"
+repeat_slurm = repo_path + "bin_on_repeat_count.py"
+default_nocluster = repo_path + "run_dagcon_consensus_nocluster.py"
+repeat_nocluster = repo_path + "bin_on_repeat_count_nocluster.py"
+split = repo_path + "split_forward_reverse_reads.py"
+calculate = repo_path + "calculate_depth.py"
+plot_dashboard = repo_path + "plot_Dashboard.R"
+check_numbers = repo_path + "check_numbers.py"
+find_read_bam = repo_path + "find_read_bam.py"
+structure = repo_path + "make_structure.py"
+cosmic = repo_path + "data_files/COSMIC_mutations.bed"
+lastparam = repo_path + "data_files/last_params"
+
 
 # Paths to tools
 bwa = "/hpc/local/CentOS7/cog_bioinf/bwa-0.7.17/bwa"
@@ -23,7 +27,6 @@ bam2m5 = "/hpc/compgen/tools/bam2m5/bam2m5.py"
 pbdagcon = "/hpc/compgen/tools/pbdagcon/src/cpp/pbdagcon"
 lastal = "/hpc/compgen/tools/last-921/src/lastal"
 lastsplit = "/hpc/compgen/tools/last-921/src/last-split"
-lastparam = str(repo_path) + "data_files/last_params"
 mafconvert = "/hpc/compgen/tools/last-921/scripts/maf-convert"
 rscript= "/hpc/local/CentOS7/common/lang/R/3.2.2/bin/Rscript"
 samtools = "/hpc/local/CentOS7/cog/software/samtools-1.2/samtools"
@@ -32,11 +35,13 @@ samtools = "/hpc/local/CentOS7/cog/software/samtools-1.2/samtools"
 full_ref = "/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/Homo_sapiens.GRCh37.GATK.illumina_cyclomics_backbone.fasta"
 target_ref = "/hpc/compgen/GENOMES/Cyclomics_reference_genome/version12/BRAF_TP53_EGFR_BB_pjet.fasta"
 
+
 #  General settings
-SLURM_JOB_TIME_SHORT = "2:00:00"	# Job time SLURM		
-SLURM_JOB_TIME_MED = "8:00:00"		# Job time SLURM
-SLURM_JOB_TIME_LONG = "196:00:00"	# Job time SLURM
-MAX_MEM_TARGET = 10			# Memory SLURM (low for targeted mapping) 
+SLURM_JOB_TIME_SHORT = "4:00:00"        # Job time SLURM
+SLURM_JOB_TIME_MED = "144:00:00"        # Job time SLURM
+SLURM_JOB_TIME_LONG = "196:00:00"       # Job time SLURM
+
+MAX_MEM_TARGET = 12			# Memory SLURM (low for targeted mapping) 
 MAX_MEM_FULL  = 32 			# Memory SLURM (higher for full mapping)
 THREADS = 2 				# Threads to be used in several jobs
 MIN_CONS_LEN = 35			# Minimum consensus lenght for pbdagcon

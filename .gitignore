@@ -1,0 +1,6 @@
+*.pyc
+.DS_Store
+
+data_files
+tools
+logs

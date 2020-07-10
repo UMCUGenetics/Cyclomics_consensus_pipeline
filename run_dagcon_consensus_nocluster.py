@@ -18,7 +18,7 @@ if __name__ == "__main__":
     group.add_option("-c", default = settings.DAGCON_MIN_COV, dest = "coverage", metavar = "[INT]", help = "minimum coverage required for assembly [default = pgdagcon_coverage in settings.py]")
     group.add_option("-p", dest = "prefix", metavar = "[STRING]", help = "prefix of BAM names [default = off (FASTQ input folder name)]")
     group.add_option("-n", default = settings.MAX_READS_JOB, dest = "number", metavar="[INT]", help = "max number of reads within a tar file [default MAX_READS_JOB in settings.py]")
-    group.add_option("--cl", default = settings.MIN_CONS_LEN, dest = "cons_len", metavar = "INT", help = "minimum length (bp) for consensus calling [default MIN_CONS_LEN in settings.py]")      
+    group.add_option("--cl", default = settings.MIN_CONS_LEN, dest = "cons_len", metavar = "INT", help = "minimum length (bp) for consensus calling [default MIN_CONS_LEN in settings.py]")
     group.add_option("--bwa", default = settings.bwa, dest = "bwa", metavar = "[PATH]", help = "full path to bwa executable [default bwa in settings.py ]")
     group.add_option("--sa", default = settings.sambamba, dest = "sambamba", metavar = "[PATH]", help = "full path to sambamba executable [default sambamba in settings.py]")
     group.add_option("--la", default = settings.lastal, dest = "lastal", metavar = "[PATH]", help = "full path to lastal executable [default last in settings.py]")
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     files = subprocess.getoutput("find {} -iname \"*fastq\"".format(wkdir)).split()
     if len(files) == 0: ## likely that fastq are compressed
         files = subprocess.getoutput("find {} -iname \"*fastq.gz\"".format(wkdir)).split()
-        gz = "on"    
+        gz = "on"
     else:
         gz = "off"
     fastq_dic = {}
@@ -118,7 +118,7 @@ if __name__ == "__main__":
                 else:
                     line_dic[str(fastq_files)] += [{read_new:[fastqline + 1, fastqline + 4]}]
                 fastqline += 4
-            else: # loop until next @ is found 
+            else: # loop until next @ is found
                 fastqline += 1
 
     total = 0
@@ -149,21 +149,21 @@ if __name__ == "__main__":
                     if "OK" not in dic_bl[fastq.split("_")[0]]:
                         readf = "fail"
                     else:
-                        readf = "pass" 
+                        readf = "pass"
                 else:
-                    readf = "pass"  
+                    readf = "pass"
             else: # if no blacklist, all reads are passed
                  readf = "pass"
 
-            if readf == "pass": 
+            if readf == "pass":
                 """Make BAM file."""
                 if gz == "on":
-                    cat = "zcat" 
+                    cat = "zcat < " # MacOS: "think different"...
                 else:
-                    cat = "cat"          
+                    cat = "cat"
 
-                action = "{cat} {item} | sed -n \'{pos0},{pos1}\'p | {lastal} -Q 1 -p {lastparam} {refgenome_target_db} -P 1 /dev/stdin | {lastsplit} | {mafconvert} -f {refgenome_target_db}.dict sam -r \"ID:{fastq} PL:nanopore SM:{fastq}\" /dev/stdin | {sambamba} view -S -f bam /dev/stdin | {sambamba} sort -t 1 /dev/stdin -o {outdir}/bam/{folder}_{subnumber}/{fastq}.sorted.bam ".format(
-                    cat=cat, 
+                action = "{cat} {item} | sed -n \'{pos0},{pos1}\'p | {lastal} -Q 1 -P 1 -p {lastparam} {refgenome_target_db} /dev/stdin | {lastsplit} | {mafconvert} -f {refgenome_target_db}.dict sam -r \"ID:{fastq} PL:nanopore SM:{fastq}\" /dev/stdin | {sambamba} view -S -f bam /dev/stdin | {sambamba} sort -t 1 /dev/stdin -o {outdir}/bam/{folder}_{subnumber}/{fastq}.sorted.bam ".format(
+                    cat=cat,
                     item=fastq_file,
                     pos0=position[0],
                     pos1=position[1],
@@ -187,7 +187,7 @@ if __name__ == "__main__":
                     subnumber=subnumber
                 ))
 
-                action = "tar --remove-files -f {folder}_{subnumber}.tar -r {fastq}.sorted.bam*".format(
+                action = "tar -f {folder}_{subnumber}.tar -r {fastq}.sorted.bam*".format(
                     folder=folder,
                     subnumber=subnumber,
                     fastq=fastq
@@ -195,7 +195,7 @@ if __name__ == "__main__":
                 os.system(action)
 
                 """Extract BAM file from TAR ball and stdout to command to make m5"""
-                action = "tar -axf {outdir}/bam/{folder}_{subnumber}/{folder}_{subnumber}.tar {fastq}.sorted.bam -O | python {bam2m5} - {refgenome_target} {outdir}/m5/{folder}_{subnumber}/{fastq}.sorted.m5".format(
+                action = "tar -xOf {outdir}/bam/{folder}_{subnumber}/{folder}_{subnumber}.tar {fastq}.sorted.bam | python {bam2m5} - {refgenome_target} {outdir}/m5/{folder}_{subnumber}/{fastq}.sorted.m5".format(
                     outdir=outdir,
                     folder=folder,
                     subnumber=subnumber,
@@ -204,7 +204,7 @@ if __name__ == "__main__":
                     refgenome_target=refgenome_target
                 )
                 os.system(action)
-              
+
 
                 """Add m5 to TAR ball"""
                 os.chdir("{outdir}/m5/{folder}_{subnumber}".format(
@@ -213,7 +213,7 @@ if __name__ == "__main__":
                     subnumber=subnumber
                 ))
 
-                action = "tar --remove-files -f {folder}_{subnumber}.tar -r {fastq}.sorted.m5*".format(
+                action = "tar -f {folder}_{subnumber}.tar -r {fastq}.sorted.m5*".format(
                     folder=folder,
                     subnumber=subnumber,
                     fastq=fastq
@@ -230,7 +230,7 @@ if __name__ == "__main__":
                 )
                 os.system(action)
 
-                action = "tar -axf {outdir}/m5/{folder}_{subnumber}/{folder}_{subnumber}.tar {fastq}.sorted.m5 -O |{pbdagcon} - -m {cons_len} -c {coverage} -t {trim} -j {threads} 1> {outdir}/consensus/{folder}_{subnumber}/{fastq}.consensus 2>> {outdir}/consensus/Full_insert_count_{folder}_{subnumber}.txt".format(
+                action = "tar -xOf {outdir}/m5/{folder}_{subnumber}/{folder}_{subnumber}.tar {fastq}.sorted.m5 |{pbdagcon} - -m {cons_len} -c {coverage} -t {trim} -j {threads} 1> {outdir}/consensus/{folder}_{subnumber}/{fastq}.consensus 2>> {outdir}/consensus/Full_insert_count_{folder}_{subnumber}.txt".format(
                     outdir=outdir,
                     folder=folder,
                     subnumber=subnumber,
@@ -243,7 +243,7 @@ if __name__ == "__main__":
                 )
                 os.system(action)
 
-                action = "sed -i \'s/>/>{fkey}_/g\' {outdir}/consensus/{folder}_{subnumber}/{fastq}.consensus".format(
+                action = "sed -i -e \'s/>/>{fkey}_/g\' {outdir}/consensus/{folder}_{subnumber}/{fastq}.consensus && rm {outdir}/consensus/{folder}_{subnumber}/{fastq}.consensus-e".format(
                     fkey=list(f.keys())[0],
                     outdir=outdir,
                     folder=folder,
@@ -251,15 +251,15 @@ if __name__ == "__main__":
                     fastq=fastq
                 )
                 os.system(action)
- 
+
                 """Add consensus to TAR ball"""
                 os.chdir("{outdir}/consensus/{folder}_{subnumber}".format(
                     outdir=outdir,
                     folder=folder,
                     subnumber=subnumber
                 ))
-   
-                action = "tar --remove-files -f {folder}_{subnumber}.tar -r {fastq}.consensus*".format(
+
+                action = "tar -f {folder}_{subnumber}.tar -r {fastq}.consensus*".format(
                     folder=folder,
                     subnumber=subnumber,
                     fastq=fastq
@@ -287,7 +287,7 @@ if __name__ == "__main__":
     action = "find {outdir}/consensus/ -type f -iname \"*tar\" -exec tar -O -xf {{}} \; >> {outdir}/{runid}_full_consensus.fasta".format(
         runid = runid,
         outdir = outdir
-    )  
+    )
     os.system(action)
 
 

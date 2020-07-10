@@ -71,8 +71,8 @@ if __name__ == "__main__":
         if os.path.isfile(bamtarfile):
             files=subprocess.getoutput("tar -tf {}".format(bamtarfile)).split()
             output_id = str(outfolder) + "/SH/Make_fasta_{}".format(countfolder)
-            output_file = "{output_id}.sh".format(output_id=output_id) 
- 
+            output_file = "{output_id}.sh".format(output_id=output_id)
+
             if os.path.isfile(output_file): #check if file is already present. If so, do not continue.
                 countfolder += 1
                 continue
@@ -80,7 +80,7 @@ if __name__ == "__main__":
             for f in files:
                 insert_count=0
                 if "bai" not in str(f):
-                    os.system("tar -axf {bamtarfile} {f}*".format(bamtarfile=bamtarfile, f=f))
+                    os.system("tar -xf {bamtarfile} {f}*".format(bamtarfile=bamtarfile, f=f))
                     insert_count=subprocess.getoutput("{sambamba} depth base -L {insert} {f} | cut -f3| sort -nk1 | tail -n1".format(
                         sambamba=opt.sambamba,
                         insert=opt.insert,
@@ -93,11 +93,11 @@ if __name__ == "__main__":
                         else:
                             insert_count=0
                     else:
-                        insert_count=0  
+                        insert_count=0
                     os.system("rm {}*".format(f))
 
                     if int(insert_count) >= 40:
-                        action = "tar -axf {m5tarfile} {chopf}* -O | {pbdagcon} - {param} | sed 's/>/>{chopf}_/g' 1>> {outfolder}/bin_consensus_folder/{folder}_consensus_40.fasta".format(
+                        action = "tar -xOf {m5tarfile} {chopf}* | {pbdagcon} - {param} | sed 's/>/>{chopf}_/g' 1>> {outfolder}/bin_consensus_folder/{folder}_consensus_40.fasta".format(
                             m5tarfile=m5tarfile,
                             chopf=f[0:-11],
                             pbdagcon=opt.pbdagcon,
@@ -110,19 +110,19 @@ if __name__ == "__main__":
                     elif int(insert_count) > 0 and int(insert_count) <40:
                         for x in range(1, 40):
                             if int(insert_count) == x:
-                                action = "tar -axf {m5tarfile} {chopf}* -O | {pbdagcon} - {param} | sed 's/>/>{chopf}_/g' 1>> {outfolder}/bin_consensus_folder/{folder}_consensus_{x}.fasta".format(
+                                action = "tar -xOf {m5tarfile} {chopf}* | {pbdagcon} - {param} | sed 's/>/>{chopf}_/g' 1>> {outfolder}/bin_consensus_folder/{folder}_consensus_{x}.fasta".format(
                                     m5tarfile=m5tarfile,
                                     chopf=f[0:-11],
                                     pbdagcon=opt.pbdagcon,
                                     param=pbdagcon_param,
                                     outfolder=outfolder,
                                     folder=folder,
-                                    x=x 
+                                    x=x
                                 )
                                 os.system(action)
-                    else: 
+                    else:
                         pass
-            countfolder += 1  
+            countfolder += 1
 
     """ Merge fasta files """
     for x in range(1, 41):
@@ -143,7 +143,7 @@ if __name__ == "__main__":
             map_folder=map_folder
         )
         os.system(action)
- 
+
         action = "{sambamba} view -S -f bam {map_folder}_full_consensus.sam > {map_folder}_full_consensus.bam\n".format(
             sambamba=opt.sambamba,
             map_folder=map_folder
@@ -162,14 +162,13 @@ if __name__ == "__main__":
     """ Calculate allele count """
     os.chdir("{outfolder}/bin_consensus/".format(
         outfolder=outfolder
-    ))   
- 
+    ))
+
     action = "source {venv} && {calculate} ".format(
         venv=settings.venv,
         calculate=settings.calculate
     )
     os.system(action)
 
-    action = "rm {outfolder}/bin_consensus_folder/ -r".format(outfolder=outfolder)
+    action = "rm -r {outfolder}/bin_consensus_folder/".format(outfolder=outfolder)
     os.system(action)
-
