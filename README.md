@@ -32,12 +32,15 @@ pip install -r requirements.txt
 ```
 
 ## Prepare reference genome fasta
-Todo: Explain reference genomes used. Preferably before running indexing and all as adding a BB to the ref genome is going to undo your work.
 
-### Targeted
+### Targeted Genome
+The targeted genome comprises the sequence(s) of the gene(s) or locus of interest (e.g. TP53) and the sequence(s) of the relevant backbone(s).
+This reference genome needs to be in the FASTA format, each gene or backbone added as a seperate contig.
 
-### Full
-
+### Full Genome
+The full reference genome comprises the full target genome (e.g. hg19 or hg38) and the sequence(s) of the relevant backbone(s).
+Do not add the the gene(s) of interest if the sequence is already present in the full reference genome.
+This reference genome needs to be in the FASTA format, each backbone sequence added as a seperate contig.
 
 ## Index full and targeted reference genomes
 Assuming your ref genome path and filename without extension is `${ref_genome}` (example: `${ref_genome}.fasta`), these steps should setup the indexes and such for tools used:
@@ -63,7 +66,7 @@ bwa index ${ref_genome}.fasta
 ```
 
 ## Setting.py contains paths and parameters used in the scripts.
-See settings.py file
+Change settings.py according to your own system/setup. See settings.py.
 Make sure the `venv` variable is an executable command that starts the python environment prepared earlier.
 The `mafconvert` variable needs to combine a `python2` call and the path to the script, be sure there's a space at the end of `python2 `.
 
@@ -74,14 +77,14 @@ __Always load virtualenv before running scripts__
 source venv/bin/activate
 ```
 
-1) Cyclomics_pipeline.py
+1) cyclomics_pipeline.py
 Wrapper script that includes scripts 2-9 as described below. \
     slurm            submit parallel jobs with SLURM. \
     nocluster        do not use parallel jobs (commandline only)
 
 Usage:
 ```bash
-python Cyclomics_pipeline.py {slurm/nocluster} {raw_data folder with fastq files} {output folder} {prefix (eg run or sampleID)} {insert locus (e.g. TP53)} {backbone locus (e.g. BB25)}
+python cyclomics_pipeline.py {slurm/nocluster} {raw_data folder with fastq files} {output folder} {prefix (eg run or sampleID)} {insert locus (e.g. TP53)} {backbone locus (e.g. BB25)}
 ```
 _optional:_  \
     for either slurm or nocluster: \
@@ -90,8 +93,14 @@ _optional:_  \
     for slurm only: \
         --maxfilecount 			bin_on_repeat_count.py: maximum number of files used in bin repeat. This might be helpful with large runs that will take a very long time if all data is used. Number of file * number MAX_READS_JOB = max number of reads.
 
+Note: use full paths for the input/raw_data and output folder.\
+Furthermore, fastq ór fastq.gz searching will be recursively in the input/raw_data folder.
 
-__Script that are used in Cyclomics_pipeline.py, but can also be manually runned__
+
+
+
+
+__Script that are used in cyclomics_pipeline.py, but can also be manually runned__
 
 2) run_dagcon_consensus.py / run_dagcon_consensus_nocluster.py \
 This is the main script to process the Cyclomics nanopore data.
@@ -122,7 +131,7 @@ Script to make a single file in which readID are linked to the tar-ball. Useful 
 9) plot_Dashboard.R \
 Rscript to plot statistics from the make_structure.py output file.
 
-#Additional scripts (not used in Cyclomics_pipeline.py)
+#Additional scripts (not used in cyclomics_pipeline.py)
 
 10) run_dagcon_consensus_nocluster.py \
 Like run_dagcon_consensus.py, but without the use of a scheduler. Note that this might take a long time to process the data.
