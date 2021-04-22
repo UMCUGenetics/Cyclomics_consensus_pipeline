@@ -19,7 +19,7 @@ Python v3.6 - See next paragraph
 ggplot2 (3.2.1) \
 gridExtra (2.3) \
 grid (3.2.2) \
-stringr (1.4.0) \
+stringr (1.4.0) 
 
 
 ## Make virtual python environment
