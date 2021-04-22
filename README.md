@@ -16,10 +16,10 @@ Python v2.x, x>=6, tested v2.7 - for last \
 Python v3.6 - See next paragraph
 
 ## Required R libraries (version is tested version)
-ggplot2 (3.2.1)
-gridExtra (2.3)
-grid (3.2.2)
-stringr (1.4.0)
+ggplot2 (3.2.1) \
+gridExtra (2.3) \
+grid (3.2.2) \
+stringr (1.4.0) \
 
 
 ## Make virtual python environment
