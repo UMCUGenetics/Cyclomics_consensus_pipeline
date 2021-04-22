@@ -1,7 +1,7 @@
 # Cyclomics_consensus_pipeline
 Collection of scripts to process CyclomicsSeq (nanopore) data.
 
-## Locally install these tools (version are tested versions)
+## Locally install these tools (version is tested version)
 git - Also use `git clone` to get this repo instead of a zip \
 bwa	v0.7.17	https://github.com/lh3/bwa \
 sambamba	v0.6.5	https://github.com/biod/sambamba \
@@ -14,6 +14,13 @@ Picard	(tested=v1.141) \
 Java (version=1.8.0_121) \
 Python v2.x, x>=6, tested v2.7 - for last \
 Python v3.6 - See next paragraph
+
+## Required R libraries (version is tested version)
+ggplot2 (3.2.1)
+gridExtra (2.3)
+grid (3.2.2)
+stringr (1.4.0)
+
 
 ## Make virtual python environment
 _(Tested with python v3.6.1)_
