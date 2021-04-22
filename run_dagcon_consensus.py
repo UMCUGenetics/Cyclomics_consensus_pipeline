@@ -8,6 +8,44 @@ from optparse import OptionParser
 from optparse import OptionGroup
 import settings
 
+def parse_fastq_gz(lines):
+    fastqline = 0
+    """Make dictionary of line-position of reads within the fastq file. This will be used to speed up targeted mapping"""
+    while fastqline < len(lines):
+        if "@".encode('UTF-8') in lines[fastqline]: # bypass nasty bug in which fastq's are corrupted. Corrupted will be skipped, not fixed
+            splitline = lines[fastqline].split()
+            read_id = splitline[0].split("@".encode('UTF-8'))[1].decode("utf-8")
+            read = splitline[2].split("=".encode('UTF-8'))[1].decode("utf-8")
+            channel = splitline[3].split("=".encode('UTF-8'))[1].decode("utf-8")
+            read_new = "{0}_read_{1}_ch_{2}".format(read_id, read, channel)
+            if str(fastq_files) not in line_dic:
+                line_dic[str(fastq_files)] = [{read_new:[fastqline + 1, fastqline + 4]}]
+            else:
+                line_dic[str(fastq_files)] += [{read_new:[fastqline + 1, fastqline + 4]}]
+            fastqline += 4
+        else: # loop until next @ is found
+            fastqline += 1
+    return line_dic 
+
+def parse_fastq(lines):
+    fastqline = 0
+    """Make dictionary of line-position of reads within the fastq file. This will be used to speed up targeted mapping"""
+    while fastqline < len(lines):
+        if "@" in lines[fastqline]: # bypass nasty bug in which fastq's are corrupted. Corrupted will be skipped, not fixed
+            splitline = lines[fastqline].split()
+            read_id = splitline[0].split("@")[1]
+            read = splitline[2].split("=")[1]
+            channel = splitline[3].split("=")[1]
+            read_new = "{0}_read_{1}_ch_{2}".format(read_id, read, channel)
+            if str(fastq_files) not in line_dic:
+                line_dic[str(fastq_files)] = [{read_new:[fastqline + 1, fastqline + 4]}]
+            else:
+                line_dic[str(fastq_files)] += [{read_new:[fastqline + 1, fastqline + 4]}]
+            fastqline += 4
+        else: # loop until next @ is found
+            fastqline += 1
+    return line_dic
+
 
 if __name__ == "__main__":
     parser = OptionParser();
@@ -112,25 +150,11 @@ if __name__ == "__main__":
     job_list = []
     for fastq_files in files:
         if gz == "off":
-             lines = open(fastq_files, "r").readlines()
+            lines = open(fastq_files, "r").readlines()
+            line_dic = parse_fastq(lines)
         else:
             lines = gzip.open(fastq_files, "rb").readlines()
-        fastqline = 0
-        """Make dictionary of line-position of reads within the fastq file. This will be used to speed up targeted mapping"""
-        while fastqline < len(lines):
-            if "@".encode('UTF-8') in lines[fastqline]:	# bypass nasty bug in which fastq's are corrupted. Corrupted will be skipped, not fixed
-                splitline = lines[fastqline].split()
-                read_id = splitline[0].split("@".encode('UTF-8'))[1].decode("utf-8")
-                read = splitline[2].split("=".encode('UTF-8'))[1].decode("utf-8")
-                channel = splitline[3].split("=".encode('UTF-8'))[1].decode("utf-8")
-                read_new = "{0}_read_{1}_ch_{2}".format(read_id, read, channel)
-                if str(fastq_files) not in line_dic:
-                    line_dic[str(fastq_files)] = [{read_new:[fastqline + 1, fastqline + 4]}]
-                else:
-                    line_dic[str(fastq_files)] += [{read_new:[fastqline + 1, fastqline + 4]}]
-                fastqline += 4
-            else: # loop until next @ is found 
-                fastqline += 1
+            line_dic = parse_fastq_gz(lines)
 
     total = 0
     subnumber = 0
