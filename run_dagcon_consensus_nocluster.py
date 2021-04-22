@@ -243,7 +243,7 @@ if __name__ == "__main__":
                 )
                 os.system(action)
 
-                action = "sed -i -e \'s/>/>{fkey}_/g\' {outdir}/consensus/{folder}_{subnumber}/{fastq}.consensus && rm {outdir}/consensus/{folder}_{subnumber}/{fastq}.consensus-e".format(
+                action = "sed -i -e \'s/>/>{fkey}_/g\' {outdir}/consensus/{folder}_{subnumber}/{fastq}.consensus && rm {outdir}/consensus/{folder}_{subnumber}/{fastq}.consensus".format(
                     fkey=list(f.keys())[0],
                     outdir=outdir,
                     folder=folder,
